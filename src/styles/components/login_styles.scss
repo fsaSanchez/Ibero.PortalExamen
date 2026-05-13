@@ -1,0 +1,41 @@
+/* Logo */
+.logo-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.logo-container .logo-img {
+  height: 60px;
+  width: auto;
+}
+
+/* Panel de login */
+.auth-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  height: 100%;
+  padding: 0 2rem; /* para que no toque los bordes en móviles */
+}
+
+/* Media query para móviles */
+@media (max-width: 768px) {
+  .logo-container {
+    left: 0;
+    right: auto;
+  }
+
+  .logo-container .logo-img {
+    height: 50px;
+  }
+
+  .auth-panel {
+    justify-content: flex-start; /* mover contenido hacia arriba */
+    padding-top: 80px; /* espacio para que el título no quede pegado */
+  }
+}

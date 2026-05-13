@@ -1,0 +1,153 @@
+/* Sidebar por defecto */
+.sidebar {
+   background-color: red; /* solo para ver si se despliega */
+  width: 300px;
+  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #fff;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  padding: 0;
+  z-index: 2100;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  overflow-x: hidden;
+}
+
+
+.sidebar.navbar {
+  flex-direction: column !important;   
+  align-items: stretch !important;     
+  padding: 0 !important;               
+  position: fixed;                    
+  top: 0;
+  left: 0;
+  height: 100vh;                      
+  width: 300px;                        
+  transform: translateX(-100%);       
+  transition: transform 0.3s ease;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  z-index: 2100;
+}
+
+/* Sidebar abierto en móvil */
+.sidebar.open {
+  transform: translateX(0) !important;
+}
+
+/* Sidebar siempre visible en escritorio */
+@media (min-width: 768px) {
+  .sidebar {
+    transform: translateX(0) !important; 
+    position: relative; 
+  }
+  .main-content {
+    margin-left: 0px; 
+  }
+}
+
+/* Sidebar estilos movil  */
+@media (max-width: 768px) {
+  .sidebar .logo {
+    justify-content: center !important;
+     display: flex;
+    align-items: flex-start;
+    margin: 0;  
+    padding: 0; 
+  }
+}
+
+/* Logo */
+.sidebar .logo {
+   display: flex;
+  justify-content: left;
+  align-items: flex-start;
+  margin: 0;  
+  padding: 0; 
+}
+
+.sidebar .logo img {
+  display: block; 
+  margin: 0;
+  padding: 0;
+}
+
+/* Información del usuario */
+.sidebar .user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
+/* Avatar dentro de user-info */
+.sidebar .user-info .avatar {
+  border: 1px solid rgba(0,0,0,.5);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Menú */
+.sidebar .nav {
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
+.sidebar .nav .nav-link {
+  font-size: 1rem;
+  color: #6c757d; /* texto gris por defecto */
+}
+
+.sidebar .nav .nav-link.active {
+  color: #dc3545; /* rojo bootstrap */
+  font-weight: bold;
+}
+
+/* Logout */
+.sidebar .logout {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  cursor: pointer;
+}
+
+/* Main contenido */
+.main-content {
+  flex-grow: 1;
+  padding: 20px;
+  transition: margin-left 0.3s ease;
+}
+
+
+/* Overlay solo móvil */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 2000 !important;
+  display: none;
+}
+
+.overlay.show {
+  display: block;
+}
+
+/* Botón hamburguesa móvil */
+.hamburger-btn {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 2200; /* encima de todo */
+  background-color: #fff;
+  border: none;
+  font-size: 24px;
+}

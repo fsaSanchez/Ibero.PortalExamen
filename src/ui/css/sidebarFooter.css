@@ -1,0 +1,11 @@
+.sidebarFooter{
+    color: #666;
+    text-align: left;
+    box-sizing: border-box;
+    border-top: 1px solid rgba(102, 102, 102, 0.2);
+    position: absolute; /* Fija el div en la pantalla */
+    bottom: 0; /* Coloca el div en la parte inferior */
+    left: 0; 
+    width: 100%;
+    z-index: 10;
+}

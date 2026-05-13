@@ -1,0 +1,12 @@
+.sidebarHeader{
+    font-weight: 488 !important;
+    font-style: normal !important;
+    font-size: 0.89rem !important;
+    line-height: var(--bs-body-line-height);
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    color: #666;
+    text-align: left;
+    box-sizing: border-box;
+    border-bottom: 1px solid rgba(102, 102, 102, 0.2);
+}

@@ -1,0 +1,61 @@
+.btn-toggle {
+  display: none;
+}
+
+// LOGO ESQUINA SUPERIOR
+.logo-container {
+  position: fixed;
+  top: 0px;
+  right: 0px;
+  z-index: 1000; /* Asegúrate de que esté encima de otros elementos */
+}
+
+.logo {
+  width: 130px; /* Ajusta el tamaño según sea necesario */
+}
+
+// LOGO ESQUINA SUPERIOR
+
+
+// COLOR DE CONTAINER PRINCIPAL
+.app main{
+  background-color: #fdfcfa;
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: red;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b30000;
+}
+
+/* Optional: Customize scrollbar track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 5px;
+}
+
+/* Optional: Customize scrollbar track on hover */
+::-webkit-scrollbar-track:hover {
+  background: #e1e1e1;
+}
+
+@media screen and (max-width: 600px) {
+
+  .btn-toggle {
+    display: flex;
+  }
+
+  .menu-display{
+    display: block;
+  }
+
+}

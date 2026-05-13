@@ -1,0 +1,139 @@
+@import './styles/fonts_styles.scss';
+@import './styles/shadows.scss';
+@import './styles/buttons_styles.scss';
+@import "./styles/components/load-loading.scss";
+@import "./styles/components/header.scss";
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "./styles/components/form_controls_styles.scss";
+@import "./styles/components/login_styles.scss";
+@import "./styles/components/grid.scss";
+@import "./styles/components/navbar.scss";
+html {
+  box-sizing: border-box;
+   margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+*,
+*:after,
+*:before {
+  box-sizing: inherit;
+}
+
+body {
+  font-family: 'Alberata', sans-serif;
+   margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.active{
+  color: rgb(207, 6, 34) !important;
+}
+
+.active {
+  color: rgb(207, 6, 34) !important;
+}
+.captcha-container {
+  display: flex;
+  justify-content: center; /* Centra horizontalmente el contenido */
+  align-items: center; /* Centra verticalmente si es necesario */
+  height: 100px; /* Ajusta la altura según sea necesario */
+}
+
+
+
+
+/* --- Estilos Select CatReactSelect --- */
+
+.react-select__control {
+  border-radius: 8px !important;
+  padding: 2px !important;
+  min-height: 44px !important;
+  border: 1px solid #ced4da !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hover */
+.react-select__control:hover {
+  border-color: #868e96 !important;
+}
+
+/* Focus */
+.react-select__control--is-focused {
+  border-color: #4dabf7 !important;
+  box-shadow: 0 0 0 0.2rem rgba(77, 171, 247, 0.25) !important;
+}
+
+/* Error */
+.react-select__control.is-invalid {
+  border: 2px solid #e03131 !important;
+  background-color: #fff5f5 !important;
+  box-shadow: none !important;
+}
+
+/* Texto de opción */
+.react-select__option {
+  font-size: 0.9rem !important;
+}
+
+/* Hover de opción */
+.react-select__option:hover {
+  background-color: #e7f5ff !important;
+}
+
+/* Opción seleccionada */
+.react-select__option--is-selected {
+  background-color: #4dabf7 !important;
+  color: white !important;
+}
+
+/* ---FIN  Estilos Select CatReactSelect --- */
+
+/* --- Input moderno alineado al Select anterior--- */
+
+.modern-input {
+  border-radius: 8px !important;
+  min-height: 44px !important;
+  border: 1px solid #ced4da !important;
+  transition: border-color .2s ease, box-shadow .2s ease;
+  padding-right: 8px !important;
+}
+
+.modern-input:focus {
+  border-color: #4dabf7 !important;
+  box-shadow: 0 0 0 0.2rem rgba(77, 171, 247, 0.25) !important;
+}
+
+/* Error */
+.modern-input.is-invalid {
+  border-color: #e03131 !important;
+  background-color: #fff5f5 !important;
+  box-shadow: none !important;
+}
+
+/* Valid (verde opcional, mismo tono suave) */
+.modern-input.is-valid {
+  border-color: #37b24d !important;
+}
+
+/* Readonly */
+.modern-input-readonly {
+  border: 1px solid #ced4da;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #495057;
+  white-space: pre-wrap;
+}
+
+/* ---FIN  Input moderno alineado al Select anterior--- */
+
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap');
+
+@keyframes mIn {
+  from { opacity:0; transform:translateY(-14px) scale(.97); }
+  to   { opacity:1; transform:none; }
+}
+

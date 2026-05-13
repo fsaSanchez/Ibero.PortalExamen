@@ -1,0 +1,116 @@
+.select-ibero{
+    appearance: none;            /* oculta la flecha nativa */
+    -webkit-appearance: none;    /* Safari/Chrome */
+    -moz-appearance: none;       /* Firefox */
+    background-color: #fff;
+    background-image: url('../ui/components/icons/assets/IconoChevrondown.svg'); /* tu icono */
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 24px 24px;
+    padding-right: 32px; /* espacio para que no tape el texto */
+    width: 320px;
+    height: 48px;
+    gap: 8px;
+    opacity: 1;
+    padding-right: 16px;
+    padding-left: 16px;
+    border-width: 1px;
+    border: 1px solid #1E1E1E;
+    font-family: "Praxis Next", sans-serif;
+    font-size: 1rem; 
+}
+
+.select-ibero option {
+  background-color: #fff;        /* fondo de la lista */
+  color: #333;                   /* color de texto */
+  font-size: 1rem;               /* tamaño fuente */
+  font-family: "Praxis Next", sans-serif;
+  padding: 12px 16px;            /* espaciado interno */
+}
+
+.label-ibero {
+    display: block;        /* fuerza a ocupar toda la fila */
+    margin-bottom: 5px;    /* espacio hacia el select */
+    font-family: "Praxis Next", sans-serif;
+    font-weight: 500;
+    font-size: 1rem;
+    letter-spacing: 2px;   /* puedes bajar un poco el tracking si ocupa mucho */
+    text-transform: uppercase;
+    color: #4E4843;
+}
+
+.input-ibero{
+     width: 320px;
+    height: 48px;
+    gap: 8px;
+    opacity: 1;
+    padding-right: 16px;
+    padding-left: 16px;
+    border-width: 1px;
+    border: 1px solid #1E1E1E
+}
+
+.cursor-pointer{
+  cursor: pointer;
+}
+
+/* Contenedor principal */
+.select-ibero__control {
+  background-color: #fff;
+  border: 1px solid #1E1E1E;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-family: "Praxis Next", sans-serif;
+  font-size: 1rem;
+  min-height: 48px;
+  box-shadow: none;
+}
+
+/* Texto seleccionado */
+.select-ibero__single-value {
+  color: #000;
+  font-family: "Praxis Next", sans-serif;
+  font-size: 1rem;
+}
+
+/* Placeholder */
+.select-ibero__placeholder {
+  color: gray;
+  font-family: "Praxis Next", sans-serif;
+  font-size: 1rem;
+}
+
+/* Opciones del dropdown */
+.select-ibero__option {
+  color: #000;
+  font-family: "Praxis Next", sans-serif;
+  font-size: 1rem;
+  padding: 12px 16px;
+}
+
+/* Hover sobre opciones */
+.select-ibero__option:hover {
+  background-color: #f2f2f2;
+}
+
+/* Menú desplegable */
+.select-ibero__menu {
+  font-family: "Praxis Next", sans-serif;
+}
+
+/* ✅ Ajustes móviles */
+@media (max-width: 768px) {
+  .select-ibero,
+  .input-ibero {
+    width: 100%;              /* ocupa todo el ancho del contenedor */
+    font-size: 0.95rem;        /* tipografía un poco más chica */
+    height: 44px;              /* altura más compacta */
+    background-position: right 8px center; /* acercar el ícono */
+    background-size: 20px 20px; /* ícono más pequeño */
+  }
+
+  .label-ibero {
+    font-size: 0.9rem;  /* texto del label un poco más compacto */
+    letter-spacing: 1px;
+  }
+}

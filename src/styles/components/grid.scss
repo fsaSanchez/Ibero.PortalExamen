@@ -1,0 +1,55 @@
+.button {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.test-button {
+  background-color: #1976d2;
+  color: white;
+}
+
+.delete-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+.custom-header {
+  background-color: rgba(136, 136, 136, 1) !important;
+  font-family: Praxis LT Pro;
+  font-weight: 400;
+  font-style: Regular;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0px;
+  text-align: center;
+  color: rgba(255, 255, 255, 1);
+}
+
+
+.input-grid-ibero{
+  width: 135;
+  height: 38;
+  padding: 8px;
+  gap: 4px;
+  opacity: 1;
+  border-bottom-width: 1px;
+}
+
+
+/* Responsive */
+@media (max-width: 768px) {
+  .MuiDataGrid-root {
+    font-size: 12px;
+  }
+
+  .button {
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+}
+

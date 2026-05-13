@@ -1,0 +1,107 @@
+@media (max-width: 767px) {
+    .form-container {
+        padding: 20px; /* Añade un poco de padding alrededor del formulario para mejorar la legibilidad */
+    }
+}
+
+body {
+	font-family: 'Alverata' !important;
+	font-weight: 488 !important;
+	font-style: normal !important;
+	font-size: 0.89rem !important;
+}
+
+.h2-titulo {
+	font-family: 'Alverata';
+	font-size: 48px;
+	font-weight: 400;
+	line-height: 62px;
+	letter-spacing: -2.5px;
+	text-align: left;
+	color: black;
+}
+.regresar {
+	width: 179px;
+	height: 19px;
+	top: 160px;
+	left: 770px;
+	padding: 0px 13px 0px 0px;
+	font-size: 16px; /* Asumiendo un tamaño de fuente apropiado */
+	text-decoration: none; /* Remover el subrayado si es un enlace */
+	color: #000; /* Color del texto para visibilidad */
+	opacity: 1; /* Ajuste de opacidad para que sea visible */
+}
+.titulo-login {
+	font-family: 'Alverata';
+	font-size: 33px;
+	font-weight: 400;
+	line-height: 42px;
+	letter-spacing: -2px;
+	text-align: left;
+	color: black; /* Color de texto rojo */
+}
+.subtitulo-login {
+	font-family: 'Alverata', sans-serif; /* Asegúrate de tener esta fuente o una similar */
+	font-size: 15px;
+	font-weight: 400;
+	line-height: 30px;
+	letter-spacing: -0.5px;
+	text-align: left;
+	color: #1E1E1E; /* Color de texto casi negro */
+}
+.form-control-login {
+	border: 0 !important;
+	border-bottom: 1px solid #ccc !important;
+	border-radius: 0 !important; /* Remover el radio del borde para que sea más estético */
+	box-shadow: none !important; /* Quitar sombras internas o externas */
+}
+.form-control-login:focus {
+	border-bottom: 2px solid #007bff !important; /* Color de Bootstrap para el focus */
+	box-shadow: none !important; /* Mantener sin sombras al enfocar */
+}
+.ingresar-btn {
+	width: 328px;
+	height: 50px;
+	margin: 20px auto; /* Centra el botón horizontalmente y agrega un margen vertical */
+	border-radius: 24px; /* Borde redondeado */
+	opacity: 1; /* Opacidad completa */
+	background: #CF0622; /* Color de fondo rojo */
+	color: #FFFFFF; /* Color de texto blanco para contraste */
+	border: none; /* Sin bordes */
+	cursor: pointer; /* Cursor en forma de mano */
+	font-size: 16px; /* Tamaño de texto adecuado */
+	display: block; /* Hace que el botón sea un bloque para aplicar margen auto */
+}
+.captcha-container {
+	display: flex;
+	justify-content: center; /* Centra horizontalmente el contenido */
+	align-items: center; /* Centra verticalmente si es necesario */
+	height: 100px; /* Ajusta la altura según sea necesario */
+}
+.password-input-container {
+	position: relative;
+	width: 100%; /* Asegura que el contenedor ocupe todo el ancho disponible */
+  }
+  
+  .password-toggle {
+	position: absolute;
+	top: 50%;
+	right: 10px; /* Ajusta esto si el icono sigue desbordando el input */
+	transform: translateY(-50%);
+	cursor: pointer;
+	z-index: 1; /* Asegura que el icono esté por encima del campo de texto */
+  }
+  
+  .form-control-login {
+	padding-right: 40px; /* Deja espacio para el ícono dentro del input */
+  }
+  
+  @media (max-width: 767px) {
+	.password-toggle {
+	  right: 15px; /* Ajuste para pantallas pequeñas */
+	}
+	.form-control-login {
+	  padding-right: 35px; /* Menos espacio en pantallas pequeñas */
+	}
+  }
+  
