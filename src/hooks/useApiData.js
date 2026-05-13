@@ -5,7 +5,7 @@ import { AxiosDataToken } from "../services/AxiosConnection";
 
 import { uiFinishLoading, uiStartLoading } from "../ui/store";
 import { SnackbarUtilities } from "../utilities/snackbar-manager";
-import { getSeccionValidacion } from "../Auth/store/auth_thunk";
+
 
 /**
  * Hook para manejar llamadas API con loader y notificaciones globales
@@ -81,7 +81,7 @@ export const useApiData = () => {
         throw error;
       } finally {
         dispatch(uiFinishLoading());
-        dispatch(getSeccionValidacion(currentInformationAccount));
+
       }
     },
     [dispatch, currentInformationAccount],
@@ -91,14 +91,14 @@ export const useApiData = () => {
 
 
 
-    const fetchDataSearch = useCallback(
-    async (endpoint, queryParams ) => {
-     
+  const fetchDataSearch = useCallback(
+    async (endpoint, queryParams) => {
+
       try {
         const resp = await AxiosDataToken(endpoint, "get", {}, queryParams);
 
-      
-        
+
+
         // Aquí asumo que tu backend devuelve un objeto con `respuestaStatus`
         if (resp.respuestaStatus !== "[Axios] OK") {
           SnackbarUtilities.error("Error al realizar la búsqueda");
@@ -106,13 +106,13 @@ export const useApiData = () => {
         }
         return resp.data ?? null;
       } catch (error) {
-       
+
         SnackbarUtilities.error("Error al cargar información");
         return null;
-      } 
+      }
     },
     []
   );
 
-  return { fetchData, sendData,fetchDataSearch };
+  return { fetchData, sendData, fetchDataSearch };
 };

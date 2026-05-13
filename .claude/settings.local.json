@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(New-Item -ItemType Directory -Force -Path \"C:\\\\Users\\\\hp-envy\\\\Documents\\\\Ibero.PortalExamen\\\\Ibero.PortalExamen\\\\src\\\\components\\\\ExamenGrado\\\\constants\")",
+      "Bash(Out-Null)",
+      "Bash(New-Item -ItemType Directory -Force -Path \"C:\\\\Users\\\\hp-envy\\\\Documents\\\\Ibero.PortalExamen\\\\Ibero.PortalExamen\\\\src\\\\components\\\\ExamenGrado\\\\hooks\")",
+      "Bash(Write-Host \"Directorios creados\")",
+      "PowerShell(New-Item *)"
+    ]
+  }
+}
