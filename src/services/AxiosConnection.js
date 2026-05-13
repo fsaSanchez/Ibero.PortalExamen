@@ -1,7 +1,8 @@
 import axios from "axios";
 import moment from 'moment'
-import { configGlobal } from "../config";
+import { configGlobal } from "../config/config";
 import { TypeService } from "./TypeService";
+import { handleUnauthorized } from "./AxiosInterceptor";
 
 
 
@@ -25,21 +26,7 @@ export const AxiosDataNotoken = async (endpoint, method, body = null, queryStrin
         response = await axios.post(urlApi, body, {
           headers: { 'Content-Type': 'multipart/form-data' },
         })
-
-         //valida si existe la propiedad status:200 en response
-        
-
-
-
         break
-        case 'Fileget':
-          
-        response = await axios.get(urlApi, {
-          params: queryString // 'blob' es el tipo de respuesta correcto para archivos
-        });
-      
-           return response.data
-
 
       case 'post':
         response = await axios.post(urlApi, body)
@@ -54,7 +41,7 @@ export const AxiosDataNotoken = async (endpoint, method, body = null, queryStrin
         break
 
       case 'delete':
-        response = await axios.delete(urlApi,  { params: queryString })
+        response = await axios.delete(urlApi, { data: body })
         break
 
       default:
@@ -127,6 +114,7 @@ export const AxiosDataTokenApp = async (
   //Se retorna Estatus 401 de no autorizado. De esta forma es direccionado a logout
   if (CurrenDate.isAfter(refreshTokenA)) {
     AxiosResponse.respuestaStatus = TypeService.AxiosApi401
+    handleUnauthorized();
     return AxiosResponse
   } else {
     //Si el token aun no expira, se revisa que la hora actual este entre la expiracion del token para
@@ -421,6 +409,7 @@ export const AxiosDataToken = async(
     //Se retorna Estatus 401 de no autorizado. De esta forma es direccionado a logout
     if (CurrenDate.isAfter(refreshTokenA)) {
       AxiosResponse.respuestaStatus = TypeService.AxiosApi401
+      handleUnauthorized();
       return AxiosResponse
     } else {
       //Si el token aun no expira, se revisa que la hora actual este entre la expiracion del token para
@@ -440,12 +429,14 @@ export const AxiosDataToken = async(
       headers: { Authorization: `Bearer ${token}` },
     }
 
+
     try {
         let response;
     
         switch (method) {
           case 'get':
             response = await axios.get(urlApi, {headers: config.headers, params: queryString,});
+            
             break;
     
           case 'post':
@@ -468,7 +459,6 @@ export const AxiosDataToken = async(
         // Asume que la respuesta del servidor sigue la estructura esperada
         const { data, success, message } = response.data;
 
-        console.log(response);
     
         AxiosResponse.data = data;
         AxiosResponse.message = message;

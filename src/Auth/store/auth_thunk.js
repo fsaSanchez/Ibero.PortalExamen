@@ -3,7 +3,7 @@ import {
   AxiosData,
   AxiosDataToken,
   AxiosLoginData,
-} from "../../services/AxiosConnexion";
+} from "../../services/AxiosConnection";
 import { ManageAxiosResponse } from "../../services/ResponseActionService";
 import { TypeService } from "../../services/TypeService";
 import { uiFinishLoading, uiStartLoading, uiModalClose } from "../../ui/store";

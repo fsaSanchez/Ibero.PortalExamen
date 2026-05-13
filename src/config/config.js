@@ -22,9 +22,9 @@ let RECAPTCHA_SECRET_KEY = import.meta.env.VITE_RECAPTCHA_SECRET_KEY;
 
 if (VITE_API_KEY === "local") {
   configGlobal = {
-    urlApiIbero: "https://localhost:7295/api/",
+    urlApiIbero: "https://localhost:7138/api/",
     // urlApiIbero: "https://controldocumentalvicerrectoriades.ibero.mx/back/api/",
-    urlApiGestion: "https://administracion-dit.ibero.mx/back/api/",
+    urlApiGestion: "https://solicitudesti.ibero.mx/back/api/",
     //urlApiGestion: "https://localhost:7284/api/",
   };
   RECAPTCHA_SITE_KEY = "6LfoH3kqAAAAAJoAnd5ObrGu4BZBwimub717XG5w";
@@ -33,22 +33,22 @@ if (VITE_API_KEY === "local") {
 
 if (VITE_API_KEY === "development") {
   configGlobal = {
-    urlApiIbero: "https://localhost:7295/api/",
-    urlApiGestion: "https://administracion-ditdes.ibero.mx/back/api/",
+    urlApiIbero: "https://localhost:7138/api/",
+    urlApiGestion: "https://solicitudesti.ibero.mx/back/api/",
   };
 }
 
 if (VITE_API_KEY === "test") {
   configGlobal = {
-    urlApiIbero: "https://controldocumentalvicerrectoriapru.ibero.mx/back/api/",
-    urlApiGestion: "https://administracion-ditpru.ibero.mx/back/api/",
+    urlApiIbero: "https://localhost:7138/api/",
+    urlApiGestion: "https://solicitudesti.ibero.mx/back/api/",
   };
 }
 
 if (VITE_API_KEY === "production") {
   configGlobal = {
-    urlApiIbero: "https://controldocumentalvicerrectoria.ibero.mx/back/api/",
-    urlApiGestion: "https://administracion-dit.ibero.mx/back/api/",
+    urlApiIbero: "https://localhost:7138/api/",
+    urlApiGestion: "https://solicitudesti.ibero.mx/back/api/",
   };
 }
 

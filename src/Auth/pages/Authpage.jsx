@@ -7,7 +7,7 @@ import logoSuperior from '../../assets/img/logo_ibero_superior.png'
 import { startLoadingProfilesApp } from "../store/auth_thunk";
 import { getProfilesApp } from "../functions/functions";
 import '../styles/styles_login.css'
-import { AxiosData } from "../../services/AxiosConnexion";
+import { AxiosData } from "../../services/AxiosConnection";
 import { TypeService } from "../../services/TypeService";
 import { appIdConfig } from "../../config";
 

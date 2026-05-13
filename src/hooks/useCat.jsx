@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { uiFinishLoading, uiStartLoading } from "../ui/store";
 import { ManageAxiosResponse, RefreshIsRequared } from "../services/ResponseActionService";
 import { TypeService } from "../services/TypeService";
-import { AxiosDataToken } from "../services/AxiosConnexion";
+import { AxiosDataToken } from "../services/AxiosConnection";
 
 export const UseCat = (routeCat, filter) => {
 

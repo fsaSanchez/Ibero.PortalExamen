@@ -8,7 +8,7 @@ import { Home } from "../../components/General/pages";
 import { Loading } from "../../helpers/Loading";
 import { loadable, transformRoutes } from "./route-config";
 import { startGetMenuRoutes } from "../../Auth/store/auth_thunk";
-import { DataProvider } from "../../components/ExamenGrado/context/DataContext";
+
 
 const AppRoutes = () => {
   const { routes, profileId } = useSelector((state) => state.auth);
@@ -32,9 +32,9 @@ const AppRoutes = () => {
             path="/dashboard" // Nota: sin el "/*" aquí
             element={
               <ProtectedRouteGuard>
-                <DataProvider>
+              
                   <Dashboard />
-                </DataProvider>
+            
               </ProtectedRouteGuard>
             }
           >
