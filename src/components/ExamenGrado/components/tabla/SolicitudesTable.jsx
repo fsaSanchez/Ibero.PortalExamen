@@ -12,7 +12,7 @@ import { DataGrid }                    from '@mui/x-data-grid';
 import VisibilityOutlinedIcon          from '@mui/icons-material/VisibilityOutlined';
 import CalendarMonthOutlinedIcon       from '@mui/icons-material/CalendarMonthOutlined';
 import CommentOutlinedIcon             from '@mui/icons-material/CommentOutlined';
-import VideocamOutlinedIcon            from '@mui/icons-material/VideocamOutlined';
+import Article            from '@mui/icons-material/Article';
 import moment                          from 'moment';
 
 import { StatusBadge }    from '../shared/StatusBadge';
@@ -66,21 +66,21 @@ const CeldaSolicitud = ({ row }) => (
   <Box sx={{ py: 1, minWidth: 0 }}>
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
       <Typography variant="body2" fontWeight={600} noWrap>
-        {row.folio ?? '—'}
+        {row.folio ?? `{row.idSolicitud row.programa`}     
       </Typography>
       {DOCS_ONLINE_APLICA(row.idTipoSolicitud, row.idModalidad) && (
         <Tooltip title="Tiene documentos para sesión online" placement="top">
-          <VideocamOutlinedIcon
+          <Article
             sx={{ fontSize: '0.95rem', color: '#1a56db', flexShrink: 0 }}
           />
         </Tooltip>
       )}
     </Box>
-    {row.programa && (
+    {/* {row.programa && (
       <Typography variant="caption" color="text.secondary" display="block" noWrap>
         {row.programa}
       </Typography>
-    )}
+    )} */}
     {row.fechaExamen && (
       <Typography variant="caption" color="text.secondary">
         {moment(row.fechaExamen).format('DD/MM/YYYY')}
@@ -316,6 +316,7 @@ export const SolicitudesTable = ({
       <DataGrid
         rows={solicitudes}
         columns={columns}
+        getRowId={(row) => row.idSolicitud}
         autoHeight
         getRowHeight={() => 'auto'}
         estimatedRowHeight={72}

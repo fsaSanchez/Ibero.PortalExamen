@@ -105,7 +105,7 @@ export default function ProgramacionScreen() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+    <Box sx={{ width: '100%', px: 3, py: 3 }}>
       <Typography variant="h5" fontWeight={700} sx={{ color: COLOR_IBERO, mb: 3 }}>
         Programación de Exámenes de Grado
       </Typography>

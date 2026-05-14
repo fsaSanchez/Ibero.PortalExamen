@@ -220,7 +220,7 @@ export default function IndividualScreen() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 820, mx: 'auto' }}>
+    <Box sx={{ width: '100%', px: 3, py: 3 }}>
 
       {/* Encabezado */}
       <Typography variant="h5" fontWeight={700} sx={{ color: COLOR_IBERO, mb: 0.5 }}>

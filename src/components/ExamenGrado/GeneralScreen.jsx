@@ -425,7 +425,7 @@ export default function GeneralScreen() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 820, mx: 'auto' }}>
+    <Box sx={{ width: '100%', px: 3, py: 3 }}>
 
       {/* Encabezado dinámico según paso */}
       <Box sx={{ mb: 3 }}>

@@ -360,7 +360,7 @@ export default function DocumentosScreen() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+    <Box sx={{ width: '100%', px: 3, py: 3 }}>
 
       {/* Encabezado de página */}
       <Box
@@ -451,6 +451,7 @@ export default function DocumentosScreen() {
         <DataGrid
           rows={plantillas}
           columns={columns}
+          getRowId={(row) => row.idPlantillaDocumento}
           autoHeight
           getRowHeight={() => 'auto'}
           estimatedRowHeight={64}

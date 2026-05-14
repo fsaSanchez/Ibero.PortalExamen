@@ -51,7 +51,9 @@ export const InfoGeneralExamen = ({
       <Box
         sx={{
           display:             'grid',
-          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+          gridTemplateColumns: conModalidad
+            ? { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' }
+            : { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' },
           gap:                 2.5,
           mb:                  diasHabiles !== null ? 2 : 0,
         }}
@@ -128,8 +130,8 @@ export const InfoGeneralExamen = ({
           required
           placeholder="Ej. Aula 301, edificio A"
           inputProps={{ maxLength: 200 }}
-          // Ocupa columna completa cuando conModalidad=false para que no quede hueco
-          sx={!conModalidad ? { gridColumn: { sm: '1 / -1' } } : {}}
+          // En sm y xs ocupa fila completa cuando no hay campo de modalidad
+          sx={!conModalidad ? { gridColumn: { xs: '1 / -1', md: 'auto' } } : {}}
         />
       </Box>
 
