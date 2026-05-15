@@ -451,7 +451,17 @@ export const AxiosDataToken = async(
           case 'delete':
             response = await axios.delete(urlApi, config);
             break;
-    
+
+          case 'Filepost':
+            response = await axios.post(urlApi, body, {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${token}`,
+              },
+              params: queryString,
+            });
+            break;
+
           default:
             throw new Error('Invalid HTTP method');
         }

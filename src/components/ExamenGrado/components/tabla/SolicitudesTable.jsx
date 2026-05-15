@@ -64,26 +64,21 @@ const TipoBadge = ({ idTipoSolicitud }) => {
 
 const CeldaSolicitud = ({ row }) => (
   <Box sx={{ py: 1, minWidth: 0 }}>
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-      <Typography variant="body2" fontWeight={600} noWrap>
-        {row.folio ?? `{row.idSolicitud row.programa`}     
+  
+    {row.programa && (
+      <Typography variant="caption" color="text.secondary" display="block" noWrap fontSize={'1rem'}>
+        {row.idSolicitud+" - "+row.programa}
       </Typography>
-      {DOCS_ONLINE_APLICA(row.idTipoSolicitud, row.idModalidad) && (
+    )}
+    {row.fechaExamen && (
+      <Typography variant="caption" color="text.secondary">
+        {moment(row.fechaExamen).format('DD/MM/YYYY')} {DOCS_ONLINE_APLICA(row.idTipoSolicitud, row.idModalidad) && (
         <Tooltip title="Tiene documentos para sesión online" placement="top">
           <Article
             sx={{ fontSize: '0.95rem', color: '#1a56db', flexShrink: 0 }}
           />
         </Tooltip>
       )}
-    </Box>
-    {/* {row.programa && (
-      <Typography variant="caption" color="text.secondary" display="block" noWrap>
-        {row.programa}
-      </Typography>
-    )} */}
-    {row.fechaExamen && (
-      <Typography variant="caption" color="text.secondary">
-        {moment(row.fechaExamen).format('DD/MM/YYYY')}
       </Typography>
     )}
   </Box>
@@ -119,139 +114,144 @@ export const SolicitudesTable = ({
   // ── Definición de columnas (memoizada para que DataGrid no pierda el foco) ─
 
   const columns = useMemo(() => {
-    const cols = [
-      // ── Solicitud: folio + docs-online + programa + fecha ──────────────────
-      {
-        field:      'folio',
-        headerName: 'Solicitud',
-        flex:       2,
-        minWidth:   210,
-        renderCell: ({ row }) => <CeldaSolicitud row={row} />,
-      },
+   const cols = [
+  // ── Solicitud ────────────────────────────────────────────────────────────
+  {
+    field:      'folio',
+    headerName: 'Solicitud',
+    flex:       3,   // ~50%
+    minWidth:   220,
+    renderCell: ({ row }) => <CeldaSolicitud row={row} />,
+  },
 
-      // ── Tipo: Individual / General ─────────────────────────────────────────
-      {
-        field:      'idTipoSolicitud',
-        headerName: 'Tipo',
-        width:      120,
-        renderCell: ({ row }) => <TipoBadge idTipoSolicitud={row.idTipoSolicitud} />,
-      },
+  // ── Tipo ─────────────────────────────────────────────────────────────────
+  {
+    field:      'idTipoSolicitud',
+    headerName: 'Tipo',
+    flex:       1,
+    minWidth:   90,
+    renderCell: ({ row }) => <TipoBadge idTipoSolicitud={row.idTipoSolicitud} />,
+  },
 
-      // ── Modalidad ──────────────────────────────────────────────────────────
-      {
-        field:      'idModalidad',
-        headerName: 'Modalidad',
-        width:      120,
-        renderCell: ({ row }) => <ModalidadBadge idModalidad={row.idModalidad} />,
-      },
+  // ── Modalidad ────────────────────────────────────────────────────────────
+  {
+    field:      'idModalidad',
+    headerName: 'Modalidad',
+    flex:       1,
+    minWidth:   100,
+    renderCell: ({ row }) => <ModalidadBadge idModalidad={row.idModalidad} />,
+  },
 
-      // ── Estatus: clickable (Admin) o badge estático (Coordinador) ──────────
-      {
-        field:      'idEstatus',
-        headerName: 'Estatus',
-        width:      135,
-        renderCell: ({ row }) =>
-          isAdmin ? (
-            <Tooltip title="Clic para cambiar estatus" placement="top">
-              <Box
-                onClick={(e) => { e.stopPropagation(); onCambiarEstatus(row); }}
-                sx={{
-                  cursor:   'pointer',
-                  display:  'inline-flex',
-                  '&:hover': { opacity: 0.75 },
-                }}
-              >
-                <StatusBadge idEstatus={row.idEstatus} />
-              </Box>
-            </Tooltip>
-          ) : (
+  // ── Estatus ──────────────────────────────────────────────────────────────
+  {
+    field:      'idEstatus',
+    headerName: 'Estatus',
+    flex:       1,
+    minWidth:   110,
+    renderCell: ({ row }) =>
+      isAdmin ? (
+        <Tooltip title="Clic para cambiar estatus" placement="top">
+          <Box
+            onClick={(e) => { e.stopPropagation(); onCambiarEstatus(row); }}
+            sx={{
+              cursor:   'pointer',
+              display:  'inline-flex',
+              '&:hover': { opacity: 0.75 },
+            }}
+          >
             <StatusBadge idEstatus={row.idEstatus} />
-          ),
-      },
+          </Box>
+        </Tooltip>
+      ) : (
+        <StatusBadge idEstatus={row.idEstatus} />
+      ),
+  },
 
-      // ── Asignar fecha: solo Admin, solo si Confirmada ──────────────────────
-      ...(isAdmin
-        ? [
-            {
-              field:      'asignarFecha',
-              headerName: 'Asignar fecha',
-              width:      130,
-              sortable:   false,
-              renderCell: ({ row }) =>
-                row.idEstatus === ESTATUS.CONFIRMADA ? (
-                  <Tooltip title="Asignar fecha de examen">
-                    <IconButton
-                      size="small"
-                      onClick={(e) => { e.stopPropagation(); onAsignarFecha(row); }}
-                      sx={{ color: COLOR_IBERO }}
-                    >
-                      <CalendarMonthOutlinedIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                ) : null,
-            },
-          ]
-        : []),
-
-      // ── Ver detalle: ojito → ModalDetalle ──────────────────────────────────
-      {
-        field:      'verDetalle',
-        headerName: '',
-        width:      52,
-        sortable:   false,
-        renderCell: ({ row }) => (
-          <Tooltip title={isAdmin ? 'Ver detalle' : 'Ver detalle (solo lectura)'}>
-            <IconButton
-              size="small"
-              onClick={(e) => { e.stopPropagation(); onVerDetalle(row); }}
-              sx={{ color: '#555' }}
-            >
-              <VisibilityOutlinedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        ),
-      },
-
-      // ── Observaciones ──────────────────────────────────────────────────────
-      {
-        field:      'totalObservaciones',
-        headerName: 'Observaciones',
-        width:      155,
-        sortable:   false,
-        renderCell: ({ row }) => {
-          const total = row.totalObservaciones ?? 0;
-
-          // Coordinador: solo muestra si hay observaciones
-          if (!isAdmin && total === 0) {
-            return (
-              <Typography variant="caption" color="text.disabled">
-                —
-              </Typography>
-            );
-          }
-
-          return (
-            <Button
-              size="small"
-              variant="text"
-              startIcon={<CommentOutlinedIcon sx={{ fontSize: '0.9rem !important' }} />}
-              onClick={(e) => { e.stopPropagation(); onVerObservaciones(row); }}
-              sx={{
-                fontSize:      '0.75rem',
-                textTransform: 'none',
-                color:         total > 0 ? COLOR_IBERO : '#888',
-                minWidth:      0,
-                px:            0.5,
-              }}
-            >
-              {isAdmin
-                ? total > 0 ? `Ver (${total})` : 'Agregar'
-                : `Ver (${total})`}
-            </Button>
-          );
+  // ── Asignar fecha ────────────────────────────────────────────────────────
+  ...(isAdmin
+    ? [
+        {
+          field:      'asignarFecha',
+          headerName: 'Asignar fecha',
+          flex:       1,
+          minWidth:   90,
+          sortable:   false,
+          renderCell: ({ row }) =>
+            row.idEstatus === ESTATUS.CONFIRMADA ? (
+              <Tooltip title="Asignar fecha de examen">
+                <IconButton
+                  size="small"
+                  onClick={(e) => { e.stopPropagation(); onAsignarFecha(row); }}
+                  sx={{ color: COLOR_IBERO }}
+                >
+                  <CalendarMonthOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            ) : null,
         },
-      },
-    ];
+      ]
+    : []),
+
+  // ── Ver detalle ──────────────────────────────────────────────────────────
+  {
+    field:      'verDetalle',
+    headerName: '',
+    flex:       1,
+    minWidth:   70,
+    sortable:   false,
+    renderCell: ({ row }) => (
+      <Tooltip title={isAdmin ? 'Ver detalle' : 'Ver detalle (solo lectura)'}>
+        <IconButton
+          size="small"
+          onClick={(e) => { e.stopPropagation(); onVerDetalle(row); }}
+          sx={{ color: '#555' }}
+        >
+          <VisibilityOutlinedIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    ),
+  },
+
+  // ── Observaciones ────────────────────────────────────────────────────────
+  {
+    field:      'totalObservaciones',
+    headerName: 'Observaciones',
+    flex:       1,
+    minWidth:   120,
+    sortable:   false,
+    renderCell: ({ row }) => {
+      const total = row.totalObservaciones ?? 0;
+
+      if (!isAdmin && total === 0) {
+        return (
+          <Typography variant="caption" color="text.disabled">
+            —
+          </Typography>
+        );
+      }
+
+      return (
+        <Button
+          size="small"
+          variant="text"
+          startIcon={<CommentOutlinedIcon sx={{ fontSize: '0.9rem !important' }} />}
+          onClick={(e) => { e.stopPropagation(); onVerObservaciones(row); }}
+          sx={{
+            fontSize:      '0.75rem',
+            textTransform: 'none',
+            color:         total > 0 ? COLOR_IBERO : '#888',
+            minWidth:      0,
+            px:            0.5,
+          }}
+        >
+          {isAdmin
+            ? total > 0 ? `Ver (${total})` : 'Agregar'
+            : `Ver (${total})`}
+        </Button>
+      );
+    },
+  },
+];
 
     return cols;
   }, [isAdmin, onCambiarEstatus, onVerDetalle, onAsignarFecha, onVerObservaciones]);

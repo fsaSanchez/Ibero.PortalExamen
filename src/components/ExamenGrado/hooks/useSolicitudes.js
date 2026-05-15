@@ -85,10 +85,21 @@ export const useSolicitudes = () => {
   );
 
   const registrarDocumento = useCallback(
-    async (payload) => {
-      return sendData('SolicitudDocumento', 'post', payload, {}, 'Registrando documento...');
+    async ({ idSolicitud, idTipoDocumento, archivo }) => {
+      const formData = new FormData();
+      formData.append('archivo', archivo);
+      formData.append('idSolicitud', idSolicitud);
+      formData.append('idTipoDocumento', idTipoDocumento);
+      return sendData('SolicitudDocumento', 'Filepost', formData, {}, 'Registrando documento...');
     },
     [sendData],
+  );
+
+  const obtenerArchivo = useCallback(
+    async (idLaserfiche) => {
+      return fetchData('SolicitudDocumento/GetFile', { id_laserfiche: idLaserfiche }, 'Cargando documento...');
+    },
+    [fetchData],
   );
 
   const actualizarDocumento = useCallback(
@@ -132,6 +143,7 @@ export const useSolicitudes = () => {
     cargarDocumentos,
     registrarDocumento,
     actualizarDocumento,
+    obtenerArchivo,
     // Observaciones
     agregarObservacion,
     eliminarObservacion,

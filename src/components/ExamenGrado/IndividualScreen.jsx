@@ -6,8 +6,10 @@ import {
   Typography,
   TextField,
   Button,
-  InputAdornment,
-  Divider,
+  IconButton,
+  Tooltip,
+  FormControl,
+  FormHelperText,
   CircularProgress,
   Alert,
 } from '@mui/material';
@@ -16,6 +18,7 @@ import PersonOutlineIcon           from '@mui/icons-material/PersonOutline';
 import DescriptionOutlinedIcon     from '@mui/icons-material/DescriptionOutlined';
 import PhotoOutlinedIcon           from '@mui/icons-material/PhotoOutlined';
 import SendOutlinedIcon            from '@mui/icons-material/SendOutlined';
+import FileDownloadOutlinedIcon    from '@mui/icons-material/FileDownloadOutlined';
 import { Formik, Form }           from 'formik';
 import * as Yup                   from 'yup';
 import Swal                       from 'sweetalert2';
@@ -59,33 +62,66 @@ const SectionCard = ({ title, icon: Icon, children }) => (
 
 // ─── Fila de documento ────────────────────────────────────────────────────────
 
-const DocField = ({ name, label, required, formik }) => (
-  <TextField
-    name={name}
-    label={label}
-    value={formik.values[name]}
-    onChange={formik.handleChange}
-    onBlur={formik.handleBlur}
-    error={formik.touched[name] && Boolean(formik.errors[name])}
-    helperText={
-      (formik.touched[name] && formik.errors[name]) ||
-      (!required && 'Opcional')
-    }
-    size="small"
-    fullWidth
-    placeholder="ID Laserfiche"
-    required={required}
-    slotProps={{
-      input: {
-        startAdornment: (
-          <InputAdornment position="start">
-            <DescriptionOutlinedIcon fontSize="small" sx={{ color: 'text.disabled' }} />
-          </InputAdornment>
-        ),
-      },
-    }}
-  />
-);
+const DocField = ({ name, label, required, formik, idLaserficheEjemplo, onDescargarEjemplo }) => {
+  const file    = formik.values[name];
+  const hasError = formik.touched[name] && Boolean(formik.errors[name]);
+
+  return (
+    <FormControl fullWidth error={hasError} size="small">
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <Button
+          component="label"
+          variant="outlined"
+          size="small"
+          startIcon={<DescriptionOutlinedIcon fontSize="small" sx={{ color: 'text.disabled', flexShrink: 0 }} />}
+          sx={{
+            flex:            1,
+            justifyContent:  'flex-start',
+            textTransform:   'none',
+            fontWeight:      400,
+            borderColor:     hasError ? 'error.main' : 'rgba(0,0,0,0.23)',
+            color:           file ? 'text.primary' : 'text.secondary',
+            overflow:        'hidden',
+            '&:hover':       { borderColor: COLOR_IBERO, backgroundColor: 'transparent' },
+          }}
+        >
+          <Typography variant="body2" noWrap sx={{ flex: 1, textAlign: 'left', color: 'inherit' }}>
+            {file ? file.name : label}
+          </Typography>
+          <input
+            type="file"
+            hidden
+            accept=".pdf,.doc,.docx,application/pdf"
+            onChange={(e) => {
+              formik.setFieldValue(name, e.target.files[0] ?? null);
+              formik.setFieldTouched(name, true);
+            }}
+          />
+        </Button>
+
+        <Tooltip title="Descargar ejemplo">
+          <span>
+            <IconButton
+              size="small"
+              onClick={() => onDescargarEjemplo?.(idLaserficheEjemplo)}
+              disabled={!idLaserficheEjemplo}
+              sx={{ color: idLaserficheEjemplo ? COLOR_IBERO : 'text.disabled' }}
+            >
+              <FileDownloadOutlinedIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+      </Box>
+
+      {hasError && (
+        <FormHelperText sx={{ mx: '14px' }}>{formik.errors[name]}</FormHelperText>
+      )}
+      {!hasError && !required && (
+        <FormHelperText sx={{ mx: '14px' }}>Opcional</FormHelperText>
+      )}
+    </FormControl>
+  );
+};
 
 // ─── Schema de validación ─────────────────────────────────────────────────────
 
@@ -108,14 +144,14 @@ const validationSchema = Yup.object({
   programaAlumno: Yup.string().trim().required('El programa es obligatorio'),
 
   // Sección 3 — documentos obligatorios
-  docPlantaSinodales:  Yup.string().trim().required('Requerido'),
-  docVocalAcademico1:  Yup.string().trim().required('Requerido'),
-  docVocalAcademico2:  Yup.string().trim().required('Requerido'),
-  docVocalAcademico3:  Yup.string().trim().required('Requerido'),
-  docReciboBiblioteca: Yup.string().trim().required('Requerido'),
+  docPlantaSinodales:  Yup.mixed().required('Selecciona el documento').test('is-file', 'Selecciona el documento', (v) => v instanceof File),
+  docVocalAcademico1:  Yup.mixed().required('Selecciona el documento').test('is-file', 'Selecciona el documento', (v) => v instanceof File),
+  docVocalAcademico2:  Yup.mixed().required('Selecciona el documento').test('is-file', 'Selecciona el documento', (v) => v instanceof File),
+  docVocalAcademico3:  Yup.mixed().required('Selecciona el documento').test('is-file', 'Selecciona el documento', (v) => v instanceof File),
+  docReciboBiblioteca: Yup.mixed().required('Selecciona el documento').test('is-file', 'Selecciona el documento', (v) => v instanceof File),
 
   // Sección 4 — fotografía opcional
-  docFotografia: Yup.string().trim(),
+  docFotografia: Yup.mixed().nullable(),
 });
 
 const initialValues = {
@@ -126,12 +162,12 @@ const initialValues = {
   numeroCuenta:        '',
   nombreAlumno:        '',
   programaAlumno:      '',
-  docPlantaSinodales:  '',
-  docVocalAcademico1:  '',
-  docVocalAcademico2:  '',
-  docVocalAcademico3:  '',
-  docReciboBiblioteca: '',
-  docFotografia:       '',
+  docPlantaSinodales:  null,
+  docVocalAcademico1:  null,
+  docVocalAcademico2:  null,
+  docVocalAcademico3:  null,
+  docReciboBiblioteca: null,
+  docFotografia:       null,
 };
 
 // ─── Screen principal ─────────────────────────────────────────────────────────
@@ -139,9 +175,9 @@ const initialValues = {
 export default function IndividualScreen() {
   const navigate = useNavigate();
 
-  const { modalidades }                           = useCatalogos();
-  const { crearSolicitud, agregarAlumno, registrarDocumento } = useSolicitudes();
-  const { diasHabiles, enMargenCritico, calcular, limpiar }   = useDiasHabiles();
+  const { modalidades }                                                    = useCatalogos();
+  const { crearSolicitud, agregarAlumno, registrarDocumento, obtenerArchivo } = useSolicitudes();
+  const { diasHabiles, enMargenCritico, calcular, limpiar }                = useDiasHabiles();
 
   // ── Submit ─────────────────────────────────────────────────────────────────
 
@@ -188,23 +224,20 @@ export default function IndividualScreen() {
 
       // 3 — Registrar documentos obligatorios
       const docs = [
-        { idTipoDocumento: TIPO_DOCUMENTO.PLANTA_SINODALES,  idLaserfiche: values.docPlantaSinodales },
-        { idTipoDocumento: TIPO_DOCUMENTO.VOCAL_ACADEMICO_1, idLaserfiche: values.docVocalAcademico1 },
-        { idTipoDocumento: TIPO_DOCUMENTO.VOCAL_ACADEMICO_2, idLaserfiche: values.docVocalAcademico2 },
-        { idTipoDocumento: TIPO_DOCUMENTO.VOCAL_ACADEMICO_3, idLaserfiche: values.docVocalAcademico3 },
-        { idTipoDocumento: TIPO_DOCUMENTO.RECIBO_BIBLIOTECA,  idLaserfiche: values.docReciboBiblioteca },
+        { idTipoDocumento: TIPO_DOCUMENTO.PLANTA_SINODALES,  archivo: values.docPlantaSinodales },
+        { idTipoDocumento: TIPO_DOCUMENTO.VOCAL_ACADEMICO_1, archivo: values.docVocalAcademico1 },
+        { idTipoDocumento: TIPO_DOCUMENTO.VOCAL_ACADEMICO_2, archivo: values.docVocalAcademico2 },
+        { idTipoDocumento: TIPO_DOCUMENTO.VOCAL_ACADEMICO_3, archivo: values.docVocalAcademico3 },
+        { idTipoDocumento: TIPO_DOCUMENTO.RECIBO_BIBLIOTECA,  archivo: values.docReciboBiblioteca },
       ];
 
-      // Fotografía solo si se ingresó
-      if (values.docFotografia.trim()) {
-        docs.push({
-          idTipoDocumento: TIPO_DOCUMENTO.FOTOGRAFIA,
-          idLaserfiche:    values.docFotografia.trim(),
-        });
+      // Fotografía solo si se seleccionó un archivo
+      if (values.docFotografia instanceof File) {
+        docs.push({ idTipoDocumento: TIPO_DOCUMENTO.FOTOGRAFIA, archivo: values.docFotografia });
       }
 
       for (const doc of docs) {
-        await registrarDocumento({ idSolicitud, ...doc });
+        await registrarDocumento({ idSolicitud, idTipoDocumento: doc.idTipoDocumento, archivo: doc.archivo });
       }
 
       // 4 — Éxito: limpiar y volver
@@ -215,6 +248,20 @@ export default function IndividualScreen() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // ── Descarga de ejemplo por ID Laserfiche ──────────────────────────────────
+
+  const handleDescargarEjemplo = async (idLaserfiche) => {
+    if (!idLaserfiche) return;
+    const base64 = await obtenerArchivo(idLaserfiche);
+    if (!base64) return;
+    const binary = atob(base64);
+    const bytes  = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const url  = URL.createObjectURL(blob);
+    window.open(url, '_blank');
   };
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -306,8 +353,8 @@ export default function IndividualScreen() {
             {/* ── Sección 3: Documentos obligatorios ───────────────────── */}
             <SectionCard title="Documentos obligatorios" icon={DescriptionOutlinedIcon}>
               <Alert severity="info" sx={{ mb: 2.5, fontSize: '0.82rem', borderRadius: 1.5 }}>
-                Ingresa el <strong>ID Laserfiche</strong> de cada documento ya cargado en el sistema
-                documental.
+                Selecciona el <strong>archivo PDF</strong> de cada documento requerido. El ID Laserfiche
+                se generará automáticamente al guardar.
               </Alert>
 
               <Box
@@ -322,24 +369,28 @@ export default function IndividualScreen() {
                   label="Planta de sinodales"
                   required
                   formik={formik}
+                  onDescargarEjemplo={handleDescargarEjemplo}
                 />
                 <DocField
                   name="docVocalAcademico1"
                   label="Vocal Académico 1"
                   required
                   formik={formik}
+                  onDescargarEjemplo={handleDescargarEjemplo}
                 />
                 <DocField
                   name="docVocalAcademico2"
                   label="Vocal Académico 2"
                   required
                   formik={formik}
+                  onDescargarEjemplo={handleDescargarEjemplo}
                 />
                 <DocField
                   name="docVocalAcademico3"
                   label="Vocal Académico 3"
                   required
                   formik={formik}
+                  onDescargarEjemplo={handleDescargarEjemplo}
                 />
                 <Box sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}>
                   <DocField
@@ -347,6 +398,7 @@ export default function IndividualScreen() {
                     label="Recibo de biblioteca"
                     required
                     formik={formik}
+                    onDescargarEjemplo={handleDescargarEjemplo}
                   />
                 </Box>
               </Box>
@@ -355,7 +407,7 @@ export default function IndividualScreen() {
             {/* ── Sección 4: Fotografía digital (opcional) ─────────────── */}
             <SectionCard title="Fotografía digital" icon={PhotoOutlinedIcon}>
               <Typography variant="body2" color="text.secondary" mb={2}>
-                Este documento es opcional. Solo inclúyelo si ya fue cargado en Laserfiche.
+                Este documento es opcional. Selecciona el archivo solo si cuentas con la fotografía digital.
               </Typography>
               <Box sx={{ maxWidth: 400 }}>
                 <DocField
@@ -363,6 +415,7 @@ export default function IndividualScreen() {
                   label="Fotografía digital"
                   required={false}
                   formik={formik}
+                  onDescargarEjemplo={handleDescargarEjemplo}
                 />
               </Box>
             </SectionCard>
