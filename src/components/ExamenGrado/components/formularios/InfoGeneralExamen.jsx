@@ -110,7 +110,7 @@ export const InfoGeneralExamen = ({
             </MenuItem>
             {modalidades.map((m) => (
               <MenuItem key={m.id} value={String(m.id)}>
-                {m.nombre}
+                {m.descripcion }
               </MenuItem>
             ))}
           </TextField>
