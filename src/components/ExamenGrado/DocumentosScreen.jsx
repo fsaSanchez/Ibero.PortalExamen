@@ -22,9 +22,9 @@ import DeleteOutlineIcon               from '@mui/icons-material/DeleteOutline';
 import CloseIcon                       from '@mui/icons-material/Close';
 import DescriptionOutlinedIcon         from '@mui/icons-material/DescriptionOutlined';
 import OndemandVideoOutlinedIcon       from '@mui/icons-material/OndemandVideoOutlined';
-import ContentCopyIcon                 from '@mui/icons-material/ContentCopy';
-import CheckIcon                       from '@mui/icons-material/Check';
 import RefreshIcon                     from '@mui/icons-material/Refresh';
+import PictureAsPdfIcon                from '@mui/icons-material/PictureAsPdf';
+import UploadFileIcon                  from '@mui/icons-material/UploadFile';
 import moment                          from 'moment';
 import 'moment/locale/es';
 import Swal                            from 'sweetalert2';
@@ -37,6 +37,8 @@ import {
 } from './constants/examenGrado.constants';
 
 moment.locale('es');
+
+const TIPOS_PERMITIDOS = [1, 2, 3, 4, 5, 6];
 
 // ─── Hook local para PlantillaDocumento ──────────────────────────────────────
 
@@ -53,8 +55,14 @@ const usePlantillas = () => {
   }, [fetchData]);
 
   const registrar = useCallback(
-    (payload) =>
-      sendData('PlantillaDocumento', 'post', payload, {}, 'Registrando plantilla…'),
+    (formData) =>
+      sendData('PlantillaDocumento', 'Filepost', formData, {}, 'Registrando plantilla…'),
+    [sendData],
+  );
+
+  const actualizar = useCallback(
+    (formData) =>
+      sendData('PlantillaDocumento', 'put', formData, {}, 'Actualizando documento…'),
     [sendData],
   );
 
@@ -64,7 +72,13 @@ const usePlantillas = () => {
     [sendData],
   );
 
-  return { plantillas, cargando, cargar, registrar, eliminar };
+  const obtenerArchivo = useCallback(
+    (idLaserfiche) =>
+      fetchData(`SolicitudDocumento/GetFile/${idLaserfiche}`, {}, 'Obteniendo documento…'),
+    [fetchData],
+  );
+
+  return { plantillas, cargando, cargar, registrar, actualizar, eliminar, obtenerArchivo };
 };
 
 // ─── Badge de tipo de documento ───────────────────────────────────────────────
@@ -92,83 +106,104 @@ const TipoDocumentoBadge = ({ idTipo, nombre }) => {
   );
 };
 
-// ─── Celda de ID Laserfiche con botón de copia ───────────────────────────────
+// ─── Visor de PDF Base64 ──────────────────────────────────────────────────────
 
-const LaserficheId = ({ value }) => {
-  const [copiado, setCopiado] = useState(false);
-  const timer = useRef(null);
+const VisorPDFDialog = ({ open, base64, titulo, onClose }) => {
+  const blobUrl = React.useMemo(() => {
+    if (!base64) return null;
+    const bytes = atob(base64);
+    const arr = new Uint8Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+    const blob = new Blob([arr], { type: 'application/pdf' });
+    return URL.createObjectURL(blob);
+  }, [base64]);
 
-  const copiar = async () => {
-    try {
-      await navigator.clipboard.writeText(value ?? '');
-      setCopiado(true);
-      clearTimeout(timer.current);
-      timer.current = setTimeout(() => setCopiado(false), 1600);
-    } catch {
-      // clipboard no disponible
-    }
-  };
-
-  if (!value) return <Typography variant="body2" color="text.disabled">—</Typography>;
+  useEffect(() => {
+    return () => { if (blobUrl) URL.revokeObjectURL(blobUrl); };
+  }, [blobUrl]);
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-      <Typography
-        variant="body2"
-        sx={{ fontFamily: 'monospace', fontSize: '0.82rem', fontWeight: 500 }}
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="lg"
+      fullWidth
+      PaperProps={{ sx: { height: '90vh' } }}
+    >
+      <DialogTitle
+        sx={{
+          display:        'flex',
+          justifyContent: 'space-between',
+          alignItems:     'center',
+          borderBottom:   '1px solid #f0f0f0',
+          pb:             1.5,
+        }}
       >
-        {value}
-      </Typography>
-      <Tooltip title={copiado ? '¡Copiado!' : 'Copiar ID'} placement="top">
-        <IconButton size="small" onClick={copiar} sx={{ p: 0.3 }}>
-          {copiado ? (
-            <CheckIcon sx={{ fontSize: '0.8rem', color: 'success.main' }} />
-          ) : (
-            <ContentCopyIcon sx={{ fontSize: '0.8rem', color: 'text.disabled' }} />
-          )}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <PictureAsPdfIcon sx={{ color: COLOR_IBERO }} />
+          <Typography variant="h6" fontWeight={700}>{titulo ?? 'Documento'}</Typography>
+        </Box>
+        <IconButton size="small" onClick={onClose}>
+          <CloseIcon fontSize="small" />
         </IconButton>
-      </Tooltip>
-    </Box>
+      </DialogTitle>
+
+      <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column' }}>
+        {blobUrl ? (
+          <iframe
+            src={blobUrl}
+            title="Visor PDF"
+            style={{ flex: 1, border: 'none', width: '100%', height: '100%' }}
+          />
+        ) : (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, gap: 2 }}>
+            <CircularProgress size={24} sx={{ color: COLOR_IBERO }} />
+            <Typography variant="body2" color="text.secondary">Cargando documento…</Typography>
+          </Box>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 };
 
 // ─── Modal para registrar nueva plantilla ────────────────────────────────────
 
-const ModalAgregarPlantilla = ({ open, tiposDocumento, onClose, onGuardado }) => {
+const ModalAgregarPlantilla = ({ open, tiposDisponibles, onClose, onGuardado }) => {
   const { sendData } = useApiData();
-  const [idTipo,       setIdTipo]       = useState('');
-  const [idLaserfiche, setIdLaserfiche] = useState('');
-  const [guardando,    setGuardando]    = useState(false);
+  const [idTipo,    setIdTipo]    = useState('');
+  const [archivo,   setArchivo]   = useState(null);
+  const [guardando, setGuardando] = useState(false);
+  const fileRef = useRef(null);
 
-  // Limpiar al abrir
   useEffect(() => {
-    if (open) {
-      setIdTipo('');
-      setIdLaserfiche('');
-    }
+    if (open) { setIdTipo(''); setArchivo(null); }
   }, [open]);
 
-  const valido = idTipo !== '' && idLaserfiche.trim() !== '';
+  const valido = idTipo !== '' && archivo !== null;
+
+  const handleArchivo = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
+      setArchivo(null);
+      Swal.fire({ icon: 'warning', title: 'Archivo inválido', text: 'Solo se permiten archivos PDF.', confirmButtonColor: COLOR_IBERO });
+      return;
+    }
+    setArchivo(file);
+  };
 
   const handleGuardar = async () => {
     if (!valido) return;
     setGuardando(true);
     try {
-      const result = await sendData(
-        'PlantillaDocumento',
-        'post',
-        { idTipoDocumento: Number(idTipo), idLaserfiche: idLaserfiche.trim() },
-        {},
-        'Registrando plantilla…',
-      );
+      const formData = new FormData();
+      formData.append('archivo', archivo);
+      formData.append('idTipoDocumento', Number(idTipo));
+      const result = await sendData('PlantillaDocumento', 'Filepost', formData, {}, 'Registrando plantilla…');
       if (result !== null) onGuardado();
     } finally {
       setGuardando(false);
     }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && valido && !guardando) handleGuardar();
   };
 
   return (
@@ -187,7 +222,7 @@ const ModalAgregarPlantilla = ({ open, tiposDocumento, onClose, onGuardado }) =>
         <Box>
           <Typography variant="h6" fontWeight={700}>Registrar plantilla</Typography>
           <Typography variant="caption" color="text.secondary">
-            La plantilla quedará disponible para descarga
+            Sube el archivo PDF de la plantilla
           </Typography>
         </Box>
         <IconButton size="small" onClick={onClose} sx={{ mt: -0.25 }}>
@@ -212,7 +247,7 @@ const ModalAgregarPlantilla = ({ open, tiposDocumento, onClose, onGuardado }) =>
             <MenuItem value="" disabled>
               Seleccionar tipo…
             </MenuItem>
-            {tiposDocumento.map((t) => (
+            {tiposDisponibles.map((t) => (
               <MenuItem key={t.id} value={t.id}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   {TIPO_DOCUMENTO_ONLINE.includes(t.id)
@@ -225,19 +260,34 @@ const ModalAgregarPlantilla = ({ open, tiposDocumento, onClose, onGuardado }) =>
             ))}
           </TextField>
 
-          {/* ID Laserfiche */}
-          <TextField
-            label="ID Laserfiche"
-            value={idLaserfiche}
-            onChange={(e) => setIdLaserfiche(e.target.value)}
-            onKeyDown={handleKeyDown}
-            size="small"
-            fullWidth
-            required
-            placeholder="Ej. LF-2025-001"
-            inputProps={{ style: { fontFamily: 'monospace' } }}
-            helperText="Identificador del documento en el sistema Laserfiche"
-          />
+          {/* Archivo PDF */}
+          <Box>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="application/pdf"
+              style={{ display: 'none' }}
+              onChange={handleArchivo}
+            />
+            <Button
+              variant="outlined"
+              fullWidth
+              startIcon={<UploadFileIcon />}
+              onClick={() => fileRef.current?.click()}
+              sx={{
+                textTransform: 'none',
+                borderColor:   archivo ? 'success.main' : undefined,
+                color:         archivo ? 'success.main' : undefined,
+              }}
+            >
+              {archivo ? archivo.name : 'Seleccionar archivo PDF'}
+            </Button>
+            {archivo && (
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                {(archivo.size / 1024).toFixed(1)} KB
+              </Typography>
+            )}
+          </Box>
         </Stack>
       </DialogContent>
 
@@ -265,21 +315,151 @@ const ModalAgregarPlantilla = ({ open, tiposDocumento, onClose, onGuardado }) =>
   );
 };
 
+// ─── Modal para actualizar documento ─────────────────────────────────────────
+
+const ModalActualizarDocumento = ({ open, plantilla, nombreTipo, onClose, onActualizado }) => {
+  const { sendData } = useApiData();
+  const [archivo,   setArchivo]   = useState(null);
+  const [guardando, setGuardando] = useState(false);
+  const fileRef = useRef(null);
+
+  useEffect(() => {
+    if (open) setArchivo(null);
+  }, [open]);
+
+  const handleArchivo = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
+      setArchivo(null);
+      Swal.fire({ icon: 'warning', title: 'Archivo inválido', text: 'Solo se permiten archivos PDF.', confirmButtonColor: COLOR_IBERO });
+      return;
+    }
+    setArchivo(file);
+  };
+
+  const handleGuardar = async () => {
+    if (!archivo || !plantilla) return;
+    setGuardando(true);
+    try {
+      const formData = new FormData();
+      formData.append('archivo', archivo);
+      formData.append('idLaserfiche', plantilla.idLaserfiche);
+      const result = await sendData('PlantillaDocumento', 'put', formData, {}, 'Actualizando documento…');
+      if (result !== null) onActualizado();
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+
+      {/* Cabecera */}
+      <DialogTitle
+        sx={{
+          display:        'flex',
+          justifyContent: 'space-between',
+          alignItems:     'flex-start',
+          borderBottom:   '1px solid #f0f0f0',
+          pb:             1.5,
+        }}
+      >
+        <Box>
+          <Typography variant="h6" fontWeight={700}>Actualizar documento</Typography>
+          <Typography variant="caption" color="text.secondary">
+            {nombreTipo ?? ''}
+          </Typography>
+        </Box>
+        <IconButton size="small" onClick={onClose} sx={{ mt: -0.25 }}>
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </DialogTitle>
+
+      {/* Formulario */}
+      <DialogContent sx={{ pt: 2.5 }}>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/pdf"
+          style={{ display: 'none' }}
+          onChange={handleArchivo}
+        />
+        <Button
+          variant="outlined"
+          fullWidth
+          startIcon={<UploadFileIcon />}
+          onClick={() => fileRef.current?.click()}
+          sx={{
+            textTransform: 'none',
+            borderColor:   archivo ? 'success.main' : undefined,
+            color:         archivo ? 'success.main' : undefined,
+          }}
+        >
+          {archivo ? archivo.name : 'Seleccionar nuevo PDF'}
+        </Button>
+        {archivo && (
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+            {(archivo.size / 1024).toFixed(1)} KB
+          </Typography>
+        )}
+      </DialogContent>
+
+      {/* Acciones */}
+      <DialogActions sx={{ px: 3, pb: 2.5, pt: 1 }}>
+        <Button onClick={onClose} color="inherit" size="small" disabled={guardando}>
+          Cancelar
+        </Button>
+        <Button
+          variant="contained"
+          size="small"
+          disabled={!archivo || guardando}
+          onClick={handleGuardar}
+          startIcon={guardando ? <CircularProgress size={14} color="inherit" /> : <UploadFileIcon fontSize="small" />}
+          sx={{
+            backgroundColor:  COLOR_IBERO,
+            '&:hover':        { backgroundColor: '#6a0000' },
+            '&.Mui-disabled': { backgroundColor: '#e0e0e0' },
+          }}
+        >
+          {guardando ? 'Actualizando…' : 'Actualizar'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
 // ─── Screen principal ─────────────────────────────────────────────────────────
 
 export default function DocumentosScreen() {
-  const { plantillas, cargando, cargar, eliminar } = usePlantillas();
-  const { tiposDocumento }                         = useCatalogos();
-  const [modalOpen, setModalOpen]                  = useState(false);
+  const { plantillas, cargando, cargar, eliminar, obtenerArchivo } = usePlantillas();
+  const { tiposDocumento }                                          = useCatalogos();
+  const [modalOpen,      setModalOpen]      = useState(false);
+  const [visorState,     setVisorState]     = useState({ open: false, base64: null, titulo: '' });
+  const [modalActualizar, setModalActualizar] = useState({ open: false, plantilla: null });
 
-
+  console.log(plantillas);
   
   // Carga inicial
   useEffect(() => { cargar(); }, [cargar]);
 
-  // Lookup nombre del tipo
   const getNombreTipo = (idTipo) =>
     tiposDocumento.find((t) => t.id === idTipo)?.nombre ?? `Tipo ${idTipo}`;
+
+  // Tipos disponibles para crear: solo IDs 1-6 sin plantilla aún registrada
+  const idsRegistrados  = new Set(plantillas.map((p) => p.idTipoDocumento));
+  const tiposDisponibles = tiposDocumento.filter(
+    (t) => TIPOS_PERMITIDOS.includes(t.id) && !idsRegistrados.has(t.id),
+  );
+
+  // ── Ver documento ─────────────────────────────────────────────────────────
+
+  const handleVerDocumento = async (row) => {
+    const titulo = getNombreTipo(row.idTipoDocumento);
+    setVisorState({ open: true, base64: null, titulo });
+    const base64 = await obtenerArchivo(row.idLaserfiche);
+    setVisorState((prev) => ({ ...prev, base64 }));
+  };
 
   // ── Eliminar ──────────────────────────────────────────────────────────────
 
@@ -287,11 +467,10 @@ export default function DocumentosScreen() {
     const nombre = getNombreTipo(row.idTipoDocumento);
 
     const { isConfirmed } = await Swal.fire({
-      title:            'Eliminar plantilla',
+      title:             'Eliminar plantilla',
       html: `
         ¿Seguro que deseas eliminar la plantilla de<br/>
-        <strong>${nombre}</strong>?<br/>
-        <span style="font-family:monospace;font-size:0.85rem">${row.idLaserfiche ?? ''}</span><br/><br/>
+        <strong>${nombre}</strong>?<br/><br/>
         <span style="color:#8B0000;font-size:0.85rem">Esta acción no se puede deshacer.</span>
       `,
       icon:              'warning',
@@ -317,16 +496,29 @@ export default function DocumentosScreen() {
       renderCell: ({ row }) => (
         <TipoDocumentoBadge
           idTipo={row.idTipoDocumento}
-          nombre={getNombreTipo(row.idTipoDocumento)}
+          nombre={row.PlantillaDocumento}
         />
       ),
     },
     {
       field:      'idLaserfiche',
-      headerName: 'ID Laserfiche',
-      flex:       1.5,
-      minWidth:   180,
-      renderCell: ({ row }) => <LaserficheId value={row.idLaserfiche} />,
+      headerName: 'Documento',
+      flex:       1,
+      minWidth:   130,
+      renderCell: ({ row }) =>
+        row.idLaserfiche ? (
+          <Tooltip title="Ver documento">
+            <IconButton
+              size="small"
+              onClick={(e) => { e.stopPropagation(); handleVerDocumento(row); }}
+              sx={{ color: COLOR_IBERO, '&:hover': { backgroundColor: '#fce8e8' } }}
+            >
+              <PictureAsPdfIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        ) : (
+          <Typography variant="body2" color="text.disabled">—</Typography>
+        ),
     },
     {
       field:      'fechaCarga',
@@ -343,18 +535,29 @@ export default function DocumentosScreen() {
     {
       field:      'acciones',
       headerName: '',
-      width:      60,
+      width:      100,
       sortable:   false,
       renderCell: ({ row }) => (
-        <Tooltip title="Eliminar plantilla">
-          <IconButton
-            size="small"
-            onClick={(e) => { e.stopPropagation(); handleEliminar(row); }}
-            sx={{ color: COLOR_IBERO, '&:hover': { backgroundColor: '#fce8e8' } }}
-          >
-            <DeleteOutlineIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
+          <Tooltip title="Actualizar documento">
+            <IconButton
+              size="small"
+              onClick={(e) => { e.stopPropagation(); setModalActualizar({ open: true, plantilla: row }); }}
+              sx={{ color: '#1a56db', '&:hover': { backgroundColor: '#e8eeff' } }}
+            >
+              <UploadFileIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Eliminar plantilla">
+            <IconButton
+              size="small"
+              onClick={(e) => { e.stopPropagation(); handleEliminar(row); }}
+              sx={{ color: COLOR_IBERO, '&:hover': { backgroundColor: '#fce8e8' } }}
+            >
+              <DeleteOutlineIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
       ),
     },
   ];
@@ -380,7 +583,7 @@ export default function DocumentosScreen() {
             Plantillas de documentos
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Gestiona los identificadores Laserfiche de cada tipo de documento.
+            Gestiona los documentos PDF de cada tipo de plantilla.
           </Typography>
         </Box>
 
@@ -388,6 +591,7 @@ export default function DocumentosScreen() {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setModalOpen(true)}
+          disabled={tiposDisponibles.length === 0}
           sx={{
             backgroundColor: COLOR_IBERO,
             '&:hover':       { backgroundColor: '#6a0000' },
@@ -478,7 +682,6 @@ export default function DocumentosScreen() {
           sx={{
             border: 'none',
 
-            // Cabecera
             '& .MuiDataGrid-columnHeaders': { backgroundColor: '#f5f5f5' },
             '& .MuiDataGrid-columnHeader':  { backgroundColor: '#f5f5f5' },
             '& .MuiDataGrid-columnHeaderTitle': {
@@ -489,7 +692,6 @@ export default function DocumentosScreen() {
               letterSpacing: '0.04em',
             },
 
-            // Celdas
             '& .MuiDataGrid-cell': {
               display:      'flex',
               alignItems:   'center',
@@ -500,24 +702,40 @@ export default function DocumentosScreen() {
               outline: 'none !important',
             },
 
-            // Filas
             '& .MuiDataGrid-row:hover': { backgroundColor: '#fafafa' },
 
-            // Footer
             '& .MuiDataGrid-footerContainer': { borderTop: '1px solid #e0e0e0' },
           }}
         />
       </Paper>
 
-      {/* Modal para agregar plantilla */}
+      {/* Modal agregar plantilla */}
       <ModalAgregarPlantilla
         open={modalOpen}
-        tiposDocumento={tiposDocumento}
+        tiposDisponibles={tiposDisponibles}
         onClose={() => setModalOpen(false)}
-        onGuardado={() => {
-          setModalOpen(false);
-          cargar();
-        }}
+        onGuardado={() => { setModalOpen(false); cargar(); }}
+      />
+
+      {/* Modal actualizar documento */}
+      <ModalActualizarDocumento
+        open={modalActualizar.open}
+        plantilla={modalActualizar.plantilla}
+        nombreTipo={
+          modalActualizar.plantilla
+            ? getNombreTipo(modalActualizar.plantilla.idTipoDocumento)
+            : ''
+        }
+        onClose={() => setModalActualizar({ open: false, plantilla: null })}
+        onActualizado={() => { setModalActualizar({ open: false, plantilla: null }); cargar(); }}
+      />
+
+      {/* Visor PDF */}
+      <VisorPDFDialog
+        open={visorState.open}
+        base64={visorState.base64}
+        titulo={visorState.titulo}
+        onClose={() => setVisorState({ open: false, base64: null, titulo: '' })}
       />
     </Box>
   );
