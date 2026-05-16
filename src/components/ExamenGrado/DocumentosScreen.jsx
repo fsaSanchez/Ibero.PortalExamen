@@ -219,7 +219,7 @@ const ModalAgregarPlantilla = ({ open, tiposDocumento, onClose, onGuardado }) =>
                     ? <OndemandVideoOutlinedIcon sx={{ fontSize: '0.9rem', color: '#1a56db' }} />
                     : <DescriptionOutlinedIcon  sx={{ fontSize: '0.9rem', color: '#666' }} />
                   }
-                  {t.nombre}
+                  {t.descripcion}
                 </Box>
               </MenuItem>
             ))}
@@ -272,6 +272,8 @@ export default function DocumentosScreen() {
   const { tiposDocumento }                         = useCatalogos();
   const [modalOpen, setModalOpen]                  = useState(false);
 
+
+  
   // Carga inicial
   useEffect(() => { cargar(); }, [cargar]);
 
