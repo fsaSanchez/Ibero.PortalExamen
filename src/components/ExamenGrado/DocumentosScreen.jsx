@@ -47,35 +47,41 @@ const usePlantillas = () => {
   const [plantillas, setPlantillas] = useState([]);
   const [cargando,   setCargando]   = useState(false);
 
+  // Ref para acceder siempre a la versión más reciente sin incluirla en deps.
+  // Esto evita que cargar/registrar/etc. cambien de identidad entre renders,
+  // cortando el ciclo useEffect → fetchData → dispatch → re-render → nuevo cargar.
+  const apiRef = useRef({ fetchData, sendData });
+  apiRef.current = { fetchData, sendData };
+
   const cargar = useCallback(async () => {
     setCargando(true);
-    const data = await fetchData('PlantillaDocumento/GetAll', {}, 'Cargando plantillas…');
+    const data = await apiRef.current.fetchData('PlantillaDocumento/GetAll', {}, 'Cargando plantillas…');
     setPlantillas(data ?? []);
     setCargando(false);
-  }, [fetchData]);
+  }, []); // identidad estable — no depende de fetchData directamente
 
   const registrar = useCallback(
     (formData) =>
-      sendData('PlantillaDocumento', 'Filepost', formData, {}, 'Registrando plantilla…'),
-    [sendData],
+      apiRef.current.sendData('PlantillaDocumento', 'Filepost', formData, {}, 'Registrando plantilla…'),
+    [],
   );
 
   const actualizar = useCallback(
     (formData) =>
-      sendData('PlantillaDocumento', 'put', formData, {}, 'Actualizando documento…'),
-    [sendData],
+      apiRef.current.sendData('PlantillaDocumento', 'put', formData, {}, 'Actualizando documento…'),
+    [],
   );
 
   const eliminar = useCallback(
     (id) =>
-      sendData(`PlantillaDocumento/${id}`, 'delete', {}, {}, 'Eliminando plantilla…'),
-    [sendData],
+      apiRef.current.sendData(`PlantillaDocumento/${id}`, 'delete', {}, {}, 'Eliminando plantilla…'),
+    [],
   );
 
   const obtenerArchivo = useCallback(
     (idLaserfiche) =>
-      fetchData(`SolicitudDocumento/GetFile/${idLaserfiche}`, {}, 'Obteniendo documento…'),
-    [fetchData],
+      apiRef.current.fetchData(`SolicitudDocumento/GetFile/${idLaserfiche}`, {}, 'Obteniendo documento…'),
+    [],
   );
 
   return { plantillas, cargando, cargar, registrar, actualizar, eliminar, obtenerArchivo };
@@ -368,7 +374,7 @@ const ModalActualizarDocumento = ({ open, plantilla, nombreTipo, onClose, onActu
         <Box>
           <Typography variant="h6" fontWeight={700}>Actualizar documento</Typography>
           <Typography variant="caption" color="text.secondary">
-            {nombreTipo ?? ''}
+            {nombreTipo?? ''}
           </Typography>
         </Box>
         <IconButton size="small" onClick={onClose} sx={{ mt: -0.25 }}>
@@ -438,11 +444,17 @@ export default function DocumentosScreen() {
   const [visorState,     setVisorState]     = useState({ open: false, base64: null, titulo: '' });
   const [modalActualizar, setModalActualizar] = useState({ open: false, plantilla: null });
 
+ 
+  
+  
+  // Carga inicial — deps vacíos: cargar solo al montar.
+  // cargar ya tiene identidad estable (ver usePlantillas), pero se usa []
+  // como capa extra para que nunca se re-ejecute por cambios de referencia.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { cargar(); }, []);
+
   console.log(plantillas);
   
-  // Carga inicial
-  useEffect(() => { cargar(); }, [cargar]);
-
   const getNombreTipo = (idTipo) =>
     tiposDocumento.find((t) => t.id === idTipo)?.nombre ?? `Tipo ${idTipo}`;
 
@@ -464,7 +476,10 @@ export default function DocumentosScreen() {
   // ── Eliminar ──────────────────────────────────────────────────────────────
 
   const handleEliminar = async (row) => {
-    const nombre = getNombreTipo(row.idTipoDocumento);
+
+    console.log(row);
+    
+    const nombre = row.plantillaDocumento;
 
     const { isConfirmed } = await Swal.fire({
       title:             'Eliminar plantilla',
@@ -496,8 +511,9 @@ export default function DocumentosScreen() {
       renderCell: ({ row }) => (
         <TipoDocumentoBadge
           idTipo={row.idTipoDocumento}
-          nombre={row.PlantillaDocumento}
+          nombre={row.plantillaDocumento}
         />
+      
       ),
     },
     {
@@ -722,8 +738,8 @@ export default function DocumentosScreen() {
         open={modalActualizar.open}
         plantilla={modalActualizar.plantilla}
         nombreTipo={
-          modalActualizar.plantilla
-            ? getNombreTipo(modalActualizar.plantilla.idTipoDocumento)
+          modalActualizar.plantillaDocumento
+            ? modalActualizar.plantillaDocumento
             : ''
         }
         onClose={() => setModalActualizar({ open: false, plantilla: null })}

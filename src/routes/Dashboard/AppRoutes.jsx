@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense, useEffect, useMemo } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ProtectedRouteGuard } from "./guard/ProtectedRouteGuard";
@@ -20,7 +20,10 @@ const AppRoutes = () => {
     }
   }, [profileId, routes, dispatch]);
 
-  const dashboardRoutes = transformRoutes(routes);
+  // useMemo evita que transformRoutes recalcule en cada re-render del padre.
+  // Sin esto, AppRouter (suscrito a ui.loading) provoca re-renders de AppRoutes
+  // que crean nuevas instancias de React.lazy, desmontando la pantalla activa.
+  const dashboardRoutes = useMemo(() => transformRoutes(routes), [routes]);
 
   return (
     // Suspense debe envolver las rutas que usan lazy loading

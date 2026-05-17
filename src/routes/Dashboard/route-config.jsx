@@ -4,22 +4,30 @@ import React, { lazy } from "react";
 
 const modules = import.meta.glob("../../components/**/*.{jsx,js,tsx}");
 
+// Cache de instancias lazy — evita que cada re-render de AppRoutes cree una
+// nueva instancia de React.lazy, lo cual desmontaría el componente activo.
+const _loadableCache = new Map();
+
 // 🧩 2️⃣ Función de carga segura y compatible con Vite
 export const loadable = (relativePath) => {
-  // Construimos la ruta base esperada
+  if (_loadableCache.has(relativePath)) return _loadableCache.get(relativePath);
+
   const key = `../../components/${relativePath}.jsx`;
   const keyJs = `../../components/${relativePath}.js`;
   const keyTsx = `../../components/${relativePath}.tsx`;
 
-  // Buscamos el import correspondiente
   const importer = modules[key] || modules[keyJs] || modules[keyTsx];
 
   if (!importer) {
     console.error(`❌ No se encontró el componente: ${relativePath}`);
-    return () => <div>Componente no encontrado: {relativePath}</div>;
+    const NotFound = () => <div>Componente no encontrado: {relativePath}</div>;
+    _loadableCache.set(relativePath, NotFound);
+    return NotFound;
   }
 
-  return lazy(importer);
+  const component = lazy(importer);
+  _loadableCache.set(relativePath, component);
+  return component;
 };
 
 
