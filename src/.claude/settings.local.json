@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs grep -l \"Tab\\\\|Route\\\\|Switch\\\\|Navigate\\\\|tabs\")"
+      "Bash(xargs grep -l \"Tab\\\\|Route\\\\|Switch\\\\|Navigate\\\\|tabs\")",
+      "Bash(dotnet build *)"
     ]
   }
 }

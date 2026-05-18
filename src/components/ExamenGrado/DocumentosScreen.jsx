@@ -174,12 +174,12 @@ const VisorPDFDialog = ({ open, base64, titulo, onClose }) => {
 
 // ─── Modal para registrar nueva plantilla ────────────────────────────────────
 
-const ModalAgregarPlantilla = ({ open, tiposDisponibles, onClose, onGuardado }) => {
-  const { sendData } = useApiData();
+// Recibe `onRegistrar(formData)` desde DocumentosScreen (desde usePlantillas)
+// para evitar llamar useApiData() aquí dentro y eliminar el click programático.
+const ModalAgregarPlantilla = ({ open, tiposDisponibles, onClose, onGuardado, onRegistrar }) => {
   const [idTipo,    setIdTipo]    = useState('');
   const [archivo,   setArchivo]   = useState(null);
   const [guardando, setGuardando] = useState(false);
-  const fileRef = useRef(null);
 
   useEffect(() => {
     if (open) { setIdTipo(''); setArchivo(null); }
@@ -193,6 +193,7 @@ const ModalAgregarPlantilla = ({ open, tiposDisponibles, onClose, onGuardado }) 
     if (file.type !== 'application/pdf') {
       setArchivo(null);
       Swal.fire({ icon: 'warning', title: 'Archivo inválido', text: 'Solo se permiten archivos PDF.', confirmButtonColor: COLOR_IBERO });
+      e.target.value = '';
       return;
     }
     setArchivo(file);
@@ -205,12 +206,14 @@ const ModalAgregarPlantilla = ({ open, tiposDisponibles, onClose, onGuardado }) 
       const formData = new FormData();
       formData.append('archivo', archivo);
       formData.append('idTipoDocumento', Number(idTipo));
-      const result = await sendData('PlantillaDocumento', 'Filepost', formData, {}, 'Registrando plantilla…');
+      const result = await onRegistrar(formData);
       if (result !== null) onGuardado();
     } finally {
       setGuardando(false);
     }
   };
+
+  const inputId = 'file-input-agregar-plantilla';
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
@@ -248,7 +251,6 @@ const ModalAgregarPlantilla = ({ open, tiposDisponibles, onClose, onGuardado }) 
             onChange={(e) => setIdTipo(e.target.value)}
             size="small"
             fullWidth
-            required
           >
             <MenuItem value="" disabled>
               Seleccionar tipo…
@@ -266,28 +268,30 @@ const ModalAgregarPlantilla = ({ open, tiposDisponibles, onClose, onGuardado }) 
             ))}
           </TextField>
 
-          {/* Archivo PDF */}
+          {/* Archivo PDF — patrón label/htmlFor: sin click programático */}
           <Box>
             <input
-              ref={fileRef}
+              id={inputId}
               type="file"
               accept="application/pdf"
               style={{ display: 'none' }}
               onChange={handleArchivo}
             />
-            <Button
-              variant="outlined"
-              fullWidth
-              startIcon={<UploadFileIcon />}
-              onClick={() => fileRef.current?.click()}
-              sx={{
-                textTransform: 'none',
-                borderColor:   archivo ? 'success.main' : undefined,
-                color:         archivo ? 'success.main' : undefined,
-              }}
-            >
-              {archivo ? archivo.name : 'Seleccionar archivo PDF'}
-            </Button>
+            <label htmlFor={inputId} style={{ display: 'block', width: '100%' }}>
+              <Button
+                component="span"
+                variant="outlined"
+                fullWidth
+                startIcon={<UploadFileIcon />}
+                sx={{
+                  textTransform: 'none',
+                  borderColor:   archivo ? 'success.main' : undefined,
+                  color:         archivo ? 'success.main' : undefined,
+                }}
+              >
+                {archivo ? archivo.name : 'Seleccionar archivo PDF'}
+              </Button>
+            </label>
             {archivo && (
               <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
                 {(archivo.size / 1024).toFixed(1)} KB
@@ -299,10 +303,11 @@ const ModalAgregarPlantilla = ({ open, tiposDisponibles, onClose, onGuardado }) 
 
       {/* Acciones */}
       <DialogActions sx={{ px: 3, pb: 2.5, pt: 1 }}>
-        <Button onClick={onClose} color="inherit" size="small" disabled={guardando}>
+        <Button type="button" onClick={onClose} color="inherit" size="small" disabled={guardando}>
           Cancelar
         </Button>
         <Button
+          type="button"
           variant="contained"
           size="small"
           disabled={!valido || guardando}
@@ -323,11 +328,9 @@ const ModalAgregarPlantilla = ({ open, tiposDisponibles, onClose, onGuardado }) 
 
 // ─── Modal para actualizar documento ─────────────────────────────────────────
 
-const ModalActualizarDocumento = ({ open, plantilla, nombreTipo, onClose, onActualizado }) => {
-  const { sendData } = useApiData();
+const ModalActualizarDocumento = ({ open, plantilla, nombreTipo, onClose, onActualizado, onActualizar }) => {
   const [archivo,   setArchivo]   = useState(null);
   const [guardando, setGuardando] = useState(false);
-  const fileRef = useRef(null);
 
   useEffect(() => {
     if (open) setArchivo(null);
@@ -339,6 +342,7 @@ const ModalActualizarDocumento = ({ open, plantilla, nombreTipo, onClose, onActu
     if (file.type !== 'application/pdf') {
       setArchivo(null);
       Swal.fire({ icon: 'warning', title: 'Archivo inválido', text: 'Solo se permiten archivos PDF.', confirmButtonColor: COLOR_IBERO });
+      e.target.value = '';
       return;
     }
     setArchivo(file);
@@ -351,12 +355,14 @@ const ModalActualizarDocumento = ({ open, plantilla, nombreTipo, onClose, onActu
       const formData = new FormData();
       formData.append('archivo', archivo);
       formData.append('idLaserfiche', plantilla.idLaserfiche);
-      const result = await sendData('PlantillaDocumento', 'put', formData, {}, 'Actualizando documento…');
+      const result = await onActualizar(formData);
       if (result !== null) onActualizado();
     } finally {
       setGuardando(false);
     }
   };
+
+  const inputId = 'file-input-actualizar-documento';
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
@@ -374,7 +380,7 @@ const ModalActualizarDocumento = ({ open, plantilla, nombreTipo, onClose, onActu
         <Box>
           <Typography variant="h6" fontWeight={700}>Actualizar documento</Typography>
           <Typography variant="caption" color="text.secondary">
-            {nombreTipo?? ''}
+            {nombreTipo ?? ''}
           </Typography>
         </Box>
         <IconButton size="small" onClick={onClose} sx={{ mt: -0.25 }}>
@@ -382,28 +388,30 @@ const ModalActualizarDocumento = ({ open, plantilla, nombreTipo, onClose, onActu
         </IconButton>
       </DialogTitle>
 
-      {/* Formulario */}
+      {/* Formulario — patrón label/htmlFor: sin click programático */}
       <DialogContent sx={{ pt: 2.5 }}>
         <input
-          ref={fileRef}
+          id={inputId}
           type="file"
           accept="application/pdf"
           style={{ display: 'none' }}
           onChange={handleArchivo}
         />
-        <Button
-          variant="outlined"
-          fullWidth
-          startIcon={<UploadFileIcon />}
-          onClick={() => fileRef.current?.click()}
-          sx={{
-            textTransform: 'none',
-            borderColor:   archivo ? 'success.main' : undefined,
-            color:         archivo ? 'success.main' : undefined,
-          }}
-        >
-          {archivo ? archivo.name : 'Seleccionar nuevo PDF'}
-        </Button>
+        <label htmlFor={inputId} style={{ display: 'block', width: '100%' }}>
+          <Button
+            component="span"
+            variant="outlined"
+            fullWidth
+            startIcon={<UploadFileIcon />}
+            sx={{
+              textTransform: 'none',
+              borderColor:   archivo ? 'success.main' : undefined,
+              color:         archivo ? 'success.main' : undefined,
+            }}
+          >
+            {archivo ? archivo.name : 'Seleccionar nuevo PDF'}
+          </Button>
+        </label>
         {archivo && (
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
             {(archivo.size / 1024).toFixed(1)} KB
@@ -413,10 +421,11 @@ const ModalActualizarDocumento = ({ open, plantilla, nombreTipo, onClose, onActu
 
       {/* Acciones */}
       <DialogActions sx={{ px: 3, pb: 2.5, pt: 1 }}>
-        <Button onClick={onClose} color="inherit" size="small" disabled={guardando}>
+        <Button type="button" onClick={onClose} color="inherit" size="small" disabled={guardando}>
           Cancelar
         </Button>
         <Button
+          type="button"
           variant="contained"
           size="small"
           disabled={!archivo || guardando}
@@ -438,7 +447,7 @@ const ModalActualizarDocumento = ({ open, plantilla, nombreTipo, onClose, onActu
 // ─── Screen principal ─────────────────────────────────────────────────────────
 
 export default function DocumentosScreen() {
-  const { plantillas, cargando, cargar, eliminar, obtenerArchivo } = usePlantillas();
+  const { plantillas, cargando, cargar, registrar, actualizar, eliminar, obtenerArchivo } = usePlantillas();
   const { tiposDocumento }                                          = useCatalogos();
   const [modalOpen,      setModalOpen]      = useState(false);
   const [visorState,     setVisorState]     = useState({ open: false, base64: null, titulo: '' });
@@ -453,8 +462,6 @@ export default function DocumentosScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { cargar(); }, []);
 
-  console.log(plantillas);
-  
   const getNombreTipo = (idTipo) =>
     tiposDocumento.find((t) => t.id === idTipo)?.nombre ?? `Tipo ${idTipo}`;
 
@@ -731,19 +738,17 @@ export default function DocumentosScreen() {
         tiposDisponibles={tiposDisponibles}
         onClose={() => setModalOpen(false)}
         onGuardado={() => { setModalOpen(false); cargar(); }}
+        onRegistrar={registrar}
       />
 
       {/* Modal actualizar documento */}
       <ModalActualizarDocumento
         open={modalActualizar.open}
         plantilla={modalActualizar.plantilla}
-        nombreTipo={
-          modalActualizar.plantillaDocumento
-            ? modalActualizar.plantillaDocumento
-            : ''
-        }
+        nombreTipo={modalActualizar.plantilla?.plantillaDocumento ?? ''}
         onClose={() => setModalActualizar({ open: false, plantilla: null })}
         onActualizado={() => { setModalActualizar({ open: false, plantilla: null }); cargar(); }}
+        onActualizar={actualizar}
       />
 
       {/* Visor PDF */}
