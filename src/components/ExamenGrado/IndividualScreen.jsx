@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate }    from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Paper,
@@ -13,20 +13,20 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import CalendarTodayOutlinedIcon  from '@mui/icons-material/CalendarTodayOutlined';
-import PersonOutlineIcon           from '@mui/icons-material/PersonOutline';
-import DescriptionOutlinedIcon     from '@mui/icons-material/DescriptionOutlined';
-import PhotoOutlinedIcon           from '@mui/icons-material/PhotoOutlined';
-import SendOutlinedIcon            from '@mui/icons-material/SendOutlined';
-import FileDownloadOutlinedIcon    from '@mui/icons-material/FileDownloadOutlined';
-import { Formik, Form }           from 'formik';
-import * as Yup                   from 'yup';
-import Swal                       from 'sweetalert2';
+import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import PhotoOutlinedIcon from '@mui/icons-material/PhotoOutlined';
+import SendOutlinedIcon from '@mui/icons-material/SendOutlined';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import { Formik, Form } from 'formik';
+import * as Yup from 'yup';
+import Swal from 'sweetalert2';
 
-import { useCatalogos }           from './hooks/useCatalogos';
-import { useSolicitudes }         from './hooks/useSolicitudes';
-import { useDiasHabiles }         from './hooks/useDiasHabiles';
-import { InfoGeneralExamen }      from './components/formularios/InfoGeneralExamen';
+import { useCatalogos } from './hooks/useCatalogos';
+import { useSolicitudes } from './hooks/useSolicitudes';
+import { useDiasHabiles } from './hooks/useDiasHabiles';
+import { InfoGeneralExamen } from './components/formularios/InfoGeneralExamen';
 import {
   TIPO_SOLICITUD,
   TIPO_DOCUMENTO,
@@ -42,13 +42,13 @@ const SectionCard = ({ title, icon: Icon, children }) => (
   >
     <Box
       sx={{
-        px:              3,
-        py:              1.75,
-        display:         'flex',
-        alignItems:      'center',
-        gap:             1.25,
+        px: 3,
+        py: 1.75,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1.25,
         backgroundColor: '#fafafa',
-        borderBottom:    '1px solid #e8e8e8',
+        borderBottom: '1px solid #e8e8e8',
       }}
     >
       {Icon && <Icon sx={{ fontSize: '1.1rem', color: COLOR_IBERO }} />}
@@ -62,9 +62,35 @@ const SectionCard = ({ title, icon: Icon, children }) => (
 
 // ─── Fila de documento ────────────────────────────────────────────────────────
 
-const DocField = ({ name, label, required, formik, idLaserficheEjemplo, onDescargarEjemplo }) => {
-  const file    = formik.values[name];
+const DocField = ({ name, label, required, formik, idLaserficheEjemplo, onDescargarEjemplo, idTipoDocumento, subirDocumento }) => {
+  const [isUploading, setIsUploading] = React.useState(false);
+  const fieldValue = formik.values[name];
+  const file = fieldValue?.file || null;
   const hasError = formik.touched[name] && Boolean(formik.errors[name]);
+
+  const handleFileChange = async (e) => {
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    const resp = await subirDocumento({ idTipoDocumento, archivo: selectedFile });
+    setIsUploading(false);
+
+    if (resp && resp.guid) {
+      // Actualizamos valor, touched y error sin disparar validación automática.
+      // No usamos validateField porque NO ejecuta el schema Yup, solo field-level validate.
+      // En su lugar limpiamos el error manualmente ya que sabemos que el valor es válido.
+      formik.setFieldValue(name, { file: selectedFile, guid: resp.guid }, false);
+      formik.setFieldTouched(name, true, false);
+      formik.setFieldError(name, undefined);
+    } else {
+      formik.setFieldValue(name, null, false);
+      formik.setFieldTouched(name, true, false);
+      formik.setFieldError(name, 'Error al subir el documento, intenta de nuevo');
+    }
+    // Permite seleccionar el mismo archivo de nuevo si falló
+    e.target.value = null;
+  };
 
   return (
     <FormControl fullWidth error={hasError} size="small">
@@ -73,29 +99,33 @@ const DocField = ({ name, label, required, formik, idLaserficheEjemplo, onDescar
           component="label"
           variant="outlined"
           size="small"
-          startIcon={<DescriptionOutlinedIcon fontSize="small" sx={{ color: 'text.disabled', flexShrink: 0 }} />}
+          disabled={isUploading}
+          startIcon={
+            isUploading ? (
+              <CircularProgress size={16} sx={{ flexShrink: 0 }} />
+            ) : (
+              <DescriptionOutlinedIcon fontSize="small" sx={{ color: 'text.disabled', flexShrink: 0 }} />
+            )
+          }
           sx={{
-            flex:            1,
-            justifyContent:  'flex-start',
-            textTransform:   'none',
-            fontWeight:      400,
-            borderColor:     hasError ? 'error.main' : 'rgba(0,0,0,0.23)',
-            color:           file ? 'text.primary' : 'text.secondary',
-            overflow:        'hidden',
-            '&:hover':       { borderColor: COLOR_IBERO, backgroundColor: 'transparent' },
+            flex: 1,
+            justifyContent: 'flex-start',
+            textTransform: 'none',
+            fontWeight: 400,
+            borderColor: hasError ? 'error.main' : 'rgba(0,0,0,0.23)',
+            color: file ? 'text.primary' : 'text.secondary',
+            overflow: 'hidden',
+            '&:hover': { borderColor: COLOR_IBERO, backgroundColor: 'transparent' },
           }}
         >
           <Typography variant="body2" noWrap sx={{ flex: 1, textAlign: 'left', color: 'inherit' }}>
-            {file ? file.name : label}
+            {isUploading ? 'Subiendo...' : file ? file.name : label}
           </Typography>
           <input
             type="file"
             hidden
             accept=".pdf,.doc,.docx,application/pdf"
-            onChange={(e) => {
-              formik.setFieldValue(name, e.target.files[0] ?? null);
-              formik.setFieldTouched(name, true);
-            }}
+            onChange={handleFileChange}
           />
         </Button>
 
@@ -104,7 +134,7 @@ const DocField = ({ name, label, required, formik, idLaserficheEjemplo, onDescar
             <IconButton
               size="small"
               onClick={() => onDescargarEjemplo?.(idLaserficheEjemplo)}
-              disabled={!idLaserficheEjemplo}
+              disabled={!idLaserficheEjemplo || isUploading}
               sx={{ color: idLaserficheEjemplo ? COLOR_IBERO : 'text.disabled' }}
             >
               <FileDownloadOutlinedIcon fontSize="small" />
@@ -125,11 +155,13 @@ const DocField = ({ name, label, required, formik, idLaserficheEjemplo, onDescar
 
 // ─── Schema de validación ─────────────────────────────────────────────────────
 
+const isUploadedFile = (v) => v && v.file instanceof File && v.guid;
+
 const validationSchema = Yup.object({
   // Sección 1
-  fechaExamen:  Yup.string().required('La fecha del examen es obligatoria'),
-  horaExamen:   Yup.string().required('La hora del examen es obligatoria'),
-  idModalidad:  Yup.string()
+  fechaExamen: Yup.string().required('La fecha del examen es obligatoria'),
+  horaExamen: Yup.string().required('La hora del examen es obligatoria'),
+  idModalidad: Yup.string()
     .notOneOf(['', '0'], 'Selecciona una modalidad')
     .required('La modalidad es obligatoria'),
   lugar: Yup.string()
@@ -139,35 +171,35 @@ const validationSchema = Yup.object({
     .required('El lugar es obligatorio'),
 
   // Sección 2
-  numeroCuenta:   Yup.string().trim().required('El número de cuenta es obligatorio'),
-  nombreAlumno:   Yup.string().trim().required('El nombre del alumno es obligatorio'),
+  numeroCuenta: Yup.string().trim().required('El número de cuenta es obligatorio'),
+  nombreAlumno: Yup.string().trim().required('El nombre del alumno es obligatorio'),
   programaAlumno: Yup.string().trim().required('El programa es obligatorio'),
 
   // Sección 3 — documentos obligatorios
-  docPlantaSinodales:  Yup.mixed().required('Selecciona el documento').test('is-file', 'Selecciona el documento', (v) => v instanceof File),
-  docVocalAcademico1:  Yup.mixed().required('Selecciona el documento').test('is-file', 'Selecciona el documento', (v) => v instanceof File),
-  docVocalAcademico2:  Yup.mixed().required('Selecciona el documento').test('is-file', 'Selecciona el documento', (v) => v instanceof File),
-  docVocalAcademico3:  Yup.mixed().required('Selecciona el documento').test('is-file', 'Selecciona el documento', (v) => v instanceof File),
-  docReciboBiblioteca: Yup.mixed().required('Selecciona el documento').test('is-file', 'Selecciona el documento', (v) => v instanceof File),
+  docPlantaSinodales: Yup.mixed().required('Selecciona el documento').test('is-file', 'Espera a que suba el documento', isUploadedFile),
+  docVocalAcademico1: Yup.mixed().required('Selecciona el documento').test('is-file', 'Espera a que suba el documento', isUploadedFile),
+  docVocalAcademico2: Yup.mixed().required('Selecciona el documento').test('is-file', 'Espera a que suba el documento', isUploadedFile),
+  docVocalAcademico3: Yup.mixed().required('Selecciona el documento').test('is-file', 'Espera a que suba el documento', isUploadedFile),
+  docReciboBiblioteca: Yup.mixed().required('Selecciona el documento').test('is-file', 'Espera a que suba el documento', isUploadedFile),
 
   // Sección 4 — fotografía opcional
-  docFotografia: Yup.mixed().nullable(),
+  docFotografia: Yup.mixed().nullable().test('is-file', 'Espera a que suba el documento', (v) => !v || isUploadedFile(v)),
 });
 
 const initialValues = {
-  fechaExamen:         '',
-  horaExamen:          '',
-  idModalidad:         '',
-  lugar:               '',
-  numeroCuenta:        '',
-  nombreAlumno:        '',
-  programaAlumno:      '',
-  docPlantaSinodales:  null,
-  docVocalAcademico1:  null,
-  docVocalAcademico2:  null,
-  docVocalAcademico3:  null,
+  fechaExamen: '',
+  horaExamen: '',
+  idModalidad: '',
+  lugar: '',
+  numeroCuenta: '',
+  nombreAlumno: '',
+  programaAlumno: '',
+  docPlantaSinodales: null,
+  docVocalAcademico1: null,
+  docVocalAcademico2: null,
+  docVocalAcademico3: null,
   docReciboBiblioteca: null,
-  docFotografia:       null,
+  docFotografia: null,
 };
 
 // ─── Screen principal ─────────────────────────────────────────────────────────
@@ -175,9 +207,9 @@ const initialValues = {
 export default function IndividualScreen() {
   const navigate = useNavigate();
 
-  const { modalidades }                                                    = useCatalogos();
-  const { crearSolicitud, agregarAlumno, registrarDocumento, obtenerArchivo } = useSolicitudes();
-  const { diasHabiles, enMargenCritico, calcular, limpiar }                = useDiasHabiles();
+  const { modalidades } = useCatalogos();
+  const { crearSolicitud, subirDocumento, agregarAlumno, obtenerArchivo } = useSolicitudes();
+  const { diasHabiles, enMargenCritico, calcular, limpiar } = useDiasHabiles();
 
   // ── Submit ─────────────────────────────────────────────────────────────────
 
@@ -186,59 +218,57 @@ export default function IndividualScreen() {
       // Advertencia especial si estamos en margen crítico (10 u 11 días hábiles)
       if (enMargenCritico) {
         const { isConfirmed } = await Swal.fire({
-          title:             'Margen de tiempo ajustado',
+          title: 'Margen de tiempo ajustado',
           html: `
             La fecha del examen está a <strong>${diasHabiles} días hábiles</strong>
             de hoy, lo que entra en el margen mínimo permitido.<br/><br/>
             Verifica con la coordinación que el trámite puede procesarse en este tiempo.
           `,
-          icon:              'warning',
-          showCancelButton:  true,
+          icon: 'warning',
+          showCancelButton: true,
           confirmButtonColor: COLOR_IBERO,
           confirmButtonText: 'Enviar de todas formas',
-          cancelButtonText:  'Revisar fecha',
-          reverseButtons:    true,
+          cancelButtonText: 'Revisar fecha',
+          reverseButtons: true,
         });
         if (!isConfirmed) return;
       }
 
-      // 1 — Crear solicitud
-      const solicitudResult = await crearSolicitud({
-        idTipoSolicitud: TIPO_SOLICITUD.INDIVIDUAL,
-        fechaExamen:     values.fechaExamen,
-        horaExamen:      values.horaExamen,
-        idModalidad:     Number(values.idModalidad),
-        lugar:           values.lugar.trim(),
-      });
-      if (!solicitudResult) return;
-
-      const idSolicitud = solicitudResult.id ?? solicitudResult;
-
-      // 2 — Agregar alumno
-      await agregarAlumno({
-        idSolicitud,
-        numeroCuenta: values.numeroCuenta.trim(),
-        nombre:       values.nombreAlumno.trim(),
-        programa:     values.programaAlumno.trim(),
-      });
-
-      // 3 — Registrar documentos obligatorios
+      // 1 — Recolectar GUIDs de los documentos ya subidos
       const docs = [
-        { idTipoDocumento: TIPO_DOCUMENTO.PLANTA_SINODALES,  archivo: values.docPlantaSinodales },
-        { idTipoDocumento: TIPO_DOCUMENTO.VOCAL_ACADEMICO_1, archivo: values.docVocalAcademico1 },
-        { idTipoDocumento: TIPO_DOCUMENTO.VOCAL_ACADEMICO_2, archivo: values.docVocalAcademico2 },
-        { idTipoDocumento: TIPO_DOCUMENTO.VOCAL_ACADEMICO_3, archivo: values.docVocalAcademico3 },
-        { idTipoDocumento: TIPO_DOCUMENTO.RECIBO_BIBLIOTECA,  archivo: values.docReciboBiblioteca },
+        values.docPlantaSinodales,
+        values.docVocalAcademico1,
+        values.docVocalAcademico2,
+        values.docVocalAcademico3,
+        values.docReciboBiblioteca,
       ];
 
-      // Fotografía solo si se seleccionó un archivo
-      if (values.docFotografia instanceof File) {
-        docs.push({ idTipoDocumento: TIPO_DOCUMENTO.FOTOGRAFIA, archivo: values.docFotografia });
+      if (values.docFotografia) {
+        docs.push(values.docFotografia);
       }
 
-      for (const doc of docs) {
-        await registrarDocumento({ idSolicitud, idTipoDocumento: doc.idTipoDocumento, archivo: doc.archivo });
-      }
+      const documentoGuids = docs.filter(Boolean).map(doc => doc.guid);
+
+      // 2 — Crear solicitud con los campos generales y los GUIDs
+      const solicitudResult = await crearSolicitud({
+        idTipoSolicitud: TIPO_SOLICITUD.INDIVIDUAL,
+        fechaExamen: values.fechaExamen,
+        horaExamen: values.horaExamen,
+        idModalidad: Number(values.idModalidad),
+        lugar: values.lugar.trim(),
+        DocumentoGuids: documentoGuids,
+      });
+
+      if (!solicitudResult) return;
+
+      const idSolicitud = solicitudResult.idSolicitud;
+
+      // 3 — Agregar alumno
+      await agregarAlumno({
+        idSolicitud: Number(idSolicitud),
+        numeroCuenta: values.numeroCuenta.trim(),
+        nombreCompleto: values.nombreAlumno.trim(),
+      });
 
       // 4 — Éxito: limpiar y volver
       resetForm();
@@ -257,10 +287,10 @@ export default function IndividualScreen() {
     const base64 = await obtenerArchivo(idLaserfiche);
     if (!base64) return;
     const binary = atob(base64);
-    const bytes  = new Uint8Array(binary.length);
+    const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     const blob = new Blob([bytes], { type: 'application/pdf' });
-    const url  = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
   };
 
@@ -301,9 +331,9 @@ export default function IndividualScreen() {
             <SectionCard title="Datos del alumno" icon={PersonOutlineIcon}>
               <Box
                 sx={{
-                  display:             'grid',
+                  display: 'grid',
                   gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                  gap:                 2.5,
+                  gap: 2.5,
                 }}
               >
                 <TextField
@@ -359,9 +389,9 @@ export default function IndividualScreen() {
 
               <Box
                 sx={{
-                  display:             'grid',
+                  display: 'grid',
                   gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                  gap:                 2.5,
+                  gap: 2.5,
                 }}
               >
                 <DocField
@@ -370,6 +400,8 @@ export default function IndividualScreen() {
                   required
                   formik={formik}
                   onDescargarEjemplo={handleDescargarEjemplo}
+                  idTipoDocumento={TIPO_DOCUMENTO.PLANTA_SINODALES}
+                  subirDocumento={subirDocumento}
                 />
                 <DocField
                   name="docVocalAcademico1"
@@ -377,6 +409,8 @@ export default function IndividualScreen() {
                   required
                   formik={formik}
                   onDescargarEjemplo={handleDescargarEjemplo}
+                  idTipoDocumento={TIPO_DOCUMENTO.VOCAL_ACADEMICO_1}
+                  subirDocumento={subirDocumento}
                 />
                 <DocField
                   name="docVocalAcademico2"
@@ -384,6 +418,8 @@ export default function IndividualScreen() {
                   required
                   formik={formik}
                   onDescargarEjemplo={handleDescargarEjemplo}
+                  idTipoDocumento={TIPO_DOCUMENTO.VOCAL_ACADEMICO_2}
+                  subirDocumento={subirDocumento}
                 />
                 <DocField
                   name="docVocalAcademico3"
@@ -391,6 +427,8 @@ export default function IndividualScreen() {
                   required
                   formik={formik}
                   onDescargarEjemplo={handleDescargarEjemplo}
+                  idTipoDocumento={TIPO_DOCUMENTO.VOCAL_ACADEMICO_3}
+                  subirDocumento={subirDocumento}
                 />
                 <Box sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}>
                   <DocField
@@ -399,6 +437,8 @@ export default function IndividualScreen() {
                     required
                     formik={formik}
                     onDescargarEjemplo={handleDescargarEjemplo}
+                    idTipoDocumento={TIPO_DOCUMENTO.RECIBO_BIBLIOTECA}
+                    subirDocumento={subirDocumento}
                   />
                 </Box>
               </Box>
@@ -416,6 +456,8 @@ export default function IndividualScreen() {
                   required={false}
                   formik={formik}
                   onDescargarEjemplo={handleDescargarEjemplo}
+                  idTipoDocumento={TIPO_DOCUMENTO.FOTOGRAFIA}
+                  subirDocumento={subirDocumento}
                 />
               </Box>
             </SectionCard>
@@ -430,10 +472,10 @@ export default function IndividualScreen() {
             {/* ── Botones de acción ─────────────────────────────────────── */}
             <Box
               sx={{
-                display:        'flex',
+                display: 'flex',
                 justifyContent: 'flex-end',
-                gap:            2,
-                pb:             2,
+                gap: 2,
+                pb: 2,
               }}
             >
               <Button
@@ -455,10 +497,10 @@ export default function IndividualScreen() {
                     : <SendOutlinedIcon fontSize="small" />
                 }
                 sx={{
-                  backgroundColor:  COLOR_IBERO,
-                  '&:hover':        { backgroundColor: '#6a0000' },
+                  backgroundColor: COLOR_IBERO,
+                  '&:hover': { backgroundColor: '#6a0000' },
                   '&.Mui-disabled': { backgroundColor: '#e0e0e0' },
-                  minWidth:         160,
+                  minWidth: 160,
                 }}
               >
                 {formik.isSubmitting ? 'Enviando…' : 'Enviar solicitud'}
