@@ -84,6 +84,16 @@ export const useSolicitudes = () => {
     [fetchData],
   );
 
+  const subirDocumento = useCallback(
+    async ({ idTipoDocumento, archivo }) => {
+      const formData = new FormData();
+      formData.append('archivo', archivo);
+      formData.append('idTipoDocumento', idTipoDocumento);
+      return sendData('SolicitudDocumento', 'Filepost', formData, {}, 'Subiendo documento...');
+    },
+    [sendData],
+  );
+
   const registrarDocumento = useCallback(
     async ({ idSolicitud, idTipoDocumento, archivo }) => {
       const formData = new FormData();
@@ -141,6 +151,7 @@ export const useSolicitudes = () => {
     eliminarAlumno,
     // Documentos
     cargarDocumentos,
+    subirDocumento,
     registrarDocumento,
     actualizarDocumento,
     obtenerArchivo,
